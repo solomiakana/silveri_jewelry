@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Адмін-панель | Silveri</title>
+    <link rel="icon" type="image/x-icon" href="img/logo.ico">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="login-screen" class="login-overlay">
+        <div class="login-box">
+            <h3 style="margin-bottom: 20px;">Вхід в адмінку</h3>
+            <input type="email" id="adminEmail" placeholder="Email">
+            <input type="password" id="adminPass" placeholder="Пароль">
+            <button class="order-btn" style="width: 100%;" onclick="login()">Увійти</button>
+            <p id="login-error" class="error-msg"></p>
+        </div>
+    </div>
+
+    <div id="admin-panel" class="admin-container">
+        <button class="logout-btn" onclick="logout()">Вийти</button>
+        <h2 style="margin-bottom: 30px;">Вітаємо, Адмін!</h2>
+
+        <div class="admin-form">
+            <h3 class="section-title" style="margin-top: 0;">Додати новий товар</h3>
+            <input type="text" id="prodId" placeholder="Артикул">
+            <input type="text" id="prodTitle" placeholder="Назва">
+            <input type="number" id="prodPrice" placeholder="Ціна (грн)">
+            
+            <select id="prodCategory" class="admin-select">
+                <option value="" disabled selected>Оберіть категорію</option>
+                <option value="Каблучки">Каблучки</option>
+                <option value="Сережки">Сережки</option>
+                <option value="Підвіски">Підвіски</option>
+                <option value="Набори">Набори</option>
+                <option value="Браслети чоловічі">Браслети чоловічі</option>
+                <option value="Браслети жіночі">Браслети жіночі</option>
+                <option value="Шарми">Шарми</option>
+            </select>
+
+            <textarea id="prodDesc" placeholder="Опис" class="admin-textarea"></textarea>
+            <input type="file" id="prodImg" accept="image/*" style="margin-bottom: 15px;">
+            
+            <button class="order-btn" style="width: 100%;" onclick="uploadProduct()">Завантажити</button>
+            <p id="status" class="status-msg"></p>
+        </div>
+
+        <div class="manage-section">
+            <h3 class="section-title">Список товарів</h3>
+            <div id="admin-product-list"></div>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>

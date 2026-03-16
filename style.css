@@ -186,7 +186,7 @@ nav {
     background: var(--saturated-pink); 
     color: var(--white); 
     text-decoration: none; 
-    border-radius: 4px; /* Пряміші кути для преміальності */
+    border-radius: 4px;
     font-weight: 700; 
     text-transform: uppercase; 
     letter-spacing: 1.5px;
@@ -381,8 +381,8 @@ nav {
     display: none;
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.5); /* Трохи м'якше затемнення */
-    backdrop-filter: blur(4px); /* Розмиття фону */
+    background: rgba(0, 0, 0, 0.5); 
+    backdrop-filter: blur(4px); 
     z-index: 2000;
     align-items: center;
     justify-content: center;
@@ -443,7 +443,7 @@ nav {
 
 .modal-buttons {
     display: flex;
-    flex-direction: column; /* Робимо кнопки списком одна під одною */
+    flex-direction: column; 
     gap: 12px;
 }
 
@@ -479,14 +479,14 @@ nav {
     margin-top: 100px;
 }
 
-/* --- ВИПРАВЛЕНИЙ ОПИС У ФУТЕРІ --- */
+/* --- ОПИС У ФУТЕРІ --- */
 .footer-desc {
-    margin: 10px 0 20px 0;    /* Відступи: 10px зверху, 20px знизу */
-    font-size: 13px;          /* Менший розмір, як у інших підписів */
-    line-height: 1.5;         /* Комфортний міжрядковий інтервал */
-    color: #888;              /* Світло-сірий колір для другорядного тексту */
-    max-width: 260px;         /* Обмежуємо ширину, щоб текст не розтягувався */
-    font-weight: 400;         /* Звичайна товщина (не жирний) */
+    margin: 10px 0 20px 0; 
+    font-size: 13px;
+    line-height: 1.5;
+    color: #888;
+    max-width: 260px;
+    font-weight: 400;        
 }
 
 .footer-grid {
@@ -549,4 +549,110 @@ nav {
 
 @media (min-width: 769px) {
     .burger { display: none; }
+}
+
+/* --- 11. АДМІН-ПАНЕЛЬ --- */
+.admin-container { 
+    max-width: 800px; 
+    margin: 120px auto 40px; 
+    padding: 20px; 
+    display: none; /* Показується після логіну */
+}
+
+.login-overlay { 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: white; display: flex; align-items: center; justify-content: center; z-index: 2000; 
+}
+
+.login-box { 
+    width: 350px; padding: 30px; border: 1px solid #ddd; border-radius: 15px; 
+    text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+}
+
+.login-box input, .admin-form input, .admin-select, .admin-textarea { 
+    width: 100%; margin-bottom: 15px; padding: 12px; border-radius: 8px; 
+    border: 1px solid #ddd; box-sizing: border-box; font-size: 14px;
+}
+
+.admin-form { 
+    background: #fff; padding: 30px; border: 1px solid var(--primary-pink); 
+    border-radius: 15px; margin-bottom: 40px; 
+}
+
+.admin-product-item { 
+    display: flex; align-items: center; justify-content: space-between; 
+    padding: 15px; border-bottom: 1px solid #eee; background: #fdfdfd; 
+    margin-bottom: 10px; border-radius: 10px; 
+}
+
+.delete-btn { 
+    background: #ff4d4d; color: white; border: none; padding: 8px 15px; 
+    border-radius: 5px; cursor: pointer; transition: 0.3s;
+}
+
+.delete-btn:hover { background: #cc0000; }
+
+.logout-btn { 
+    background: #eee; border: none; padding: 8px 15px; cursor: pointer; 
+    border-radius: 5px; float: right; font-weight: 600;
+}
+
+.error-msg { color: red; font-size: 12px; margin-top: 10px; }
+.status-msg { text-align: center; margin-top: 10px; font-weight: 600; color: var(--primary-pink); }
+
+/* Додаткові стилі для списку товарів в адмінці */
+.admin-item-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-item-thumb {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #eee;
+}
+
+.admin-item-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-item-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--deep-berry);
+}
+
+.admin-item-sku {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+}
+
+.admin-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-item-price {
+    font-weight: 700;
+    color: var(--primary-pink);
+    margin-right: 5px;
+}
+
+.edit-btn {
+    background: #f0f0f0;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.edit-btn:hover {
+    background: #e0e0e0;
 }
