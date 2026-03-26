@@ -12,7 +12,7 @@ const firebaseConfig = {
     appId: "1:981654569884:web:73413d6a1697878cb27e59",
     measurementId: "G-HKBQXSS3RY"
 };
- 
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
@@ -24,308 +24,371 @@ const CONTACT_INFO = {
     phoneNumber: "+380680243337"
 };
 
+// --- УТИЛІТИ ---
+// Захист від XSS-атак при вставці даних у DOM
+const escapeHTML = (str) => typeof str === 'string' 
+    ? str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[tag]) 
+    : str;
+
 // --- 1. КЛІЄНТСЬКА ЧАСТИНА (ГОЛОВНА) ---
-async function fetchAndRenderProducts() {
+function fetchAndRenderProducts() {
     const grid = document.getElementById('product-grid');
     if (!grid) return;
 
-    grid.innerHTML = '<p style="text-align: center; width: 100%;">Завантаження колекції...</p>';
+    grid.innerHTML = '<p class="loading-msg">Завантаження колекції...</p>';
     const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
 
     onSnapshot(q, (snapshot) => {
-        grid.innerHTML = ''; 
         if (snapshot.empty) {
-            grid.innerHTML = '<p style="text-align: center; width: 100%;">Товарів поки немає.</p>';
+            grid.innerHTML = '<p class="empty-msg">Товарів поки немає.</p>';
             return;
         }
 
+        // Використовуємо DocumentFragment для мінімізації Reflow/Repaint DOM
+        const fragment = document.createDocumentFragment();
+
         snapshot.forEach((doc) => {
-            const product = doc.data();
+            const { id, title, description, price, image, category } = doc.data();
+            const safeTitle = escapeHTML(title);
+            const safeDesc = escapeHTML(description);
+            const safeId = escapeHTML(id);
+            const safeImage = escapeHTML(image) || 'img/placeholder.jpg';
+            const safeCategory = (category || "").toLowerCase();
+
             const card = document.createElement('div');
             card.className = 'product-card';
-            card.setAttribute('data-category', (product.category || "").toLowerCase());
+            card.dataset.category = safeCategory;
             
             card.innerHTML = `
-                <div class="product-id">Артикул: ${product.id || '---'}</div>
+                <div class="product-id">Артикул: ${safeId || '---'}</div>
                 <div class="product-img">
-                    <img src="${product.image || 'img/placeholder.jpg'}" alt="${product.title}" loading="lazy">
+                    <img src="${safeImage}" alt="${safeTitle}" loading="lazy">
                 </div>
-                <h3>${product.title}</h3>
-                <p class="product-desc">${product.description || ''}</p>
-                <p class="price">${product.price} грн</p>
-                <button class="order-btn" onclick="openOrderModal('${product.title.replace(/'/g, "\\'")}', '${product.price}')">Замовити</button>
+                <h3>${safeTitle}</h3>
+                <p class="product-desc">${safeDesc}</p>
+                <p class="price">${price} грн</p>
+                <button class="order-btn" data-title="${safeTitle}" data-price="${price}">Замовити</button>
             `;
-            grid.appendChild(card);
+            fragment.appendChild(card);
         });
-        initFilters();
+
+        grid.innerHTML = ''; 
+        grid.appendChild(fragment);
+        applyCurrentFilter(); // Застосовуємо активний фільтр без переприв'язки подій
     });
 }
 
 // --- 2. АДМІН-ЧАСТИНА (ЛОГІКА) ---
-
-// Вхід
-window.login = () => {
-    const email = document.getElementById('adminEmail').value;
+window.login = async () => {
+    const email = document.getElementById('adminEmail').value.trim();
     const pass = document.getElementById('adminPass').value;
     const errorP = document.getElementById('login-error');
 
     if (!email || !pass) {
-        errorP.innerText = "Заповніть всі поля!";
+        errorP.textContent = "Заповніть всі поля!";
         return;
     }
 
-    signInWithEmailAndPassword(auth, email, pass)
-        .then(() => {
-            errorP.innerText = "";
-        })
-        .catch(error => {
-            console.error("Код помилки:", error.code);
-            errorP.innerText = "Помилка: невірний логін або пароль.";
-        });
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        errorP.textContent = "";
+    } catch (error) {
+        console.error("Помилка авторизації:", error.code);
+        errorP.textContent = "Помилка: невірний логін або пароль.";
+    }
 };
 
-// Вихід
 window.logout = () => signOut(auth);
 
-// Перевірка стану авторизації
 onAuthStateChanged(auth, (user) => {
     const loginScreen = document.getElementById('login-screen');
     const adminPanel = document.getElementById('admin-panel');
 
-    if (adminPanel && loginScreen) { // Перевірка чи на сторінці адмінки
-        if (user) {
-            loginScreen.style.display = 'none';
-            adminPanel.style.display = 'block';
-            renderAdminList();
-        } else {
-            loginScreen.style.display = 'flex';
-            adminPanel.style.display = 'none';
-        }
+    if (adminPanel && loginScreen) {
+        const isLoggedIn = !!user;
+        loginScreen.style.display = isLoggedIn ? 'none' : 'flex';
+        adminPanel.style.display = isLoggedIn ? 'block' : 'none';
+        if (isLoggedIn) renderAdminList();
     }
 });
 
-// Завантаження товару
 window.uploadProduct = async () => {
     const status = document.getElementById('status');
-    const file = document.getElementById('prodImg').files[0];
+    const fileInput = document.getElementById('prodImg');
+    const form = document.querySelector('.admin-form');
+    const file = fileInput.files[0];
+    
     if (!file) return alert("Оберіть фото!");
 
-    status.innerText = "Завантаження...";
+    status.textContent = "Завантаження...";
     try {
-        const fileName = Date.now() + "_" + file.name;
-        const storageRef = ref(storage, 'products/' + fileName);
+        const fileName = `${Date.now()}_${file.name}`;
+        const storageRef = ref(storage, `products/${fileName}`);
         const snapshot = await uploadBytes(storageRef, file);
         const downloadURL = await getDownloadURL(snapshot.ref);
 
         await addDoc(collection(db, "products"), {
-            id: document.getElementById('prodId').value,
-            title: document.getElementById('prodTitle').value,
-            price: document.getElementById('prodPrice').value,
+            id: document.getElementById('prodId').value.trim(),
+            title: document.getElementById('prodTitle').value.trim(),
+            price: Number(document.getElementById('prodPrice').value),
             category: document.getElementById('prodCategory').value,
-            description: document.getElementById('prodDesc').value,
+            description: document.getElementById('prodDesc').value.trim(),
             image: downloadURL,
             createdAt: new Date()
         });
-        status.innerText = "Товар успішно додано!";
-        document.querySelector('.admin-form').reset();
+        
+        status.textContent = "Товар успішно додано!";
+        form.reset();
+        setTimeout(() => status.textContent = "", 3000); // Очищення статусу
     } catch (e) {
-        status.innerText = "Помилка!";
+        status.textContent = "Помилка завантаження!";
         console.error(e);
     }
 };
 
-// Видалення товару
 window.deleteProduct = async (docId, imageUrl) => {
     if (!confirm("Видалити товар?")) return;
     try {
-        if (imageUrl && imageUrl.includes("firebasestorage")) {
+        if (imageUrl?.includes("firebasestorage")) {
             await deleteObject(ref(storage, imageUrl));
         }
         await deleteDoc(doc(db, "products", docId));
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+        console.error("Помилка видалення:", error); 
+        alert("Не вдалося видалити товар.");
+    }
 };
 
-// ФУНКЦІЯ РЕДАГУВАННЯ ЦІНИ
 window.editPrice = async (docId, currentPrice) => {
     const newPrice = prompt(`Змінити ціну (зараз: ${currentPrice} грн):`, currentPrice);
+    const parsedPrice = Number(newPrice);
     
-    // Перевіряємо, чи користувач ввів число і не натиснув "Скасувати"
-    if (newPrice !== null && newPrice !== "" && !isNaN(newPrice)) {
+    if (newPrice !== null && newPrice.trim() !== "" && !isNaN(parsedPrice)) {
         try {
-            const productRef = doc(db, "products", docId);
-            await updateDoc(productRef, {
-                price: Number(newPrice)
-            });
+            await updateDoc(doc(db, "products", docId), { price: parsedPrice });
         } catch (e) {
             console.error("Помилка оновлення ціни:", e);
             alert("Не вдалося оновити ціну.");
         }
-    } else if (newPrice !== null && isNaN(newPrice)) {
+    } else if (newPrice !== null) {
         alert("Будь ласка, введіть коректне число!");
     }
 };
 
-// Список товарів в адмінці
 function renderAdminList() {
     const listContainer = document.getElementById('admin-product-list');
     if (!listContainer) return;
 
+    // Отримуємо значення фільтрів
+    const searchVal = document.getElementById('searchArticul')?.value.toLowerCase() || "";
+    const categoryVal = document.getElementById('filterCategory')?.value || "all";
+
     const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+    
     onSnapshot(q, (snapshot) => {
-        listContainer.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+        
         snapshot.forEach((productDoc) => {
             const data = productDoc.data();
-            const item = document.createElement('div');
-            item.className = 'admin-product-item';
             
-            item.innerHTML = `
-                <div class="admin-item-info">
-                    <img src="${data.image}" class="admin-item-thumb">
-                    <div class="admin-item-text">
-                        <span class="admin-item-title">${data.title}</span>
-                        <span class="admin-item-sku">Артикул: ${data.id || '—'}</span>
-                        <span class="admin-item-category" style="font-size: 0.85em; color: #666;">Категорія: ${data.category || '—'}</span>
+            // Логіка фільтрації
+            const matchesSearch = (data.id || "").toLowerCase().includes(searchVal);
+            const matchesCategory = (categoryVal === "all") || (data.category === categoryVal);
+
+            if (matchesSearch && matchesCategory) {
+                const safeTitle = escapeHTML(data.title);
+                const safeId = escapeHTML(data.id) || '—';
+                const safeCategory = escapeHTML(data.category) || '—';
+
+                const item = document.createElement('div');
+                item.className = 'admin-product-item';
+                
+                item.innerHTML = `
+                    <div class="admin-item-info">
+                        <img src="${escapeHTML(data.image)}" class="admin-item-thumb" loading="lazy">
+                        <div class="admin-item-text">
+                            <span class="admin-item-title">${safeTitle}</span>
+                            <span class="admin-item-sku">Артикул: ${safeId}</span>
+                            <span class="admin-item-category" style="font-size: 0.85em; color: #666;">Категорія: ${safeCategory}</span>
+                        </div>
                     </div>
-                </div>
-                <div class="admin-item-actions">
-                    <span class="admin-item-price">${data.price} грн</span>
-                    <button class="edit-btn" onclick="editPrice('${productDoc.id}', '${data.price}')" title="Редагувати ціну">✏️</button>
-                    <button class="delete-btn" onclick="deleteProduct('${productDoc.id}', '${data.image}')" title="Видалити">🗑</button>
-                </div>
-            `;
-            listContainer.appendChild(item);
+                    <div class="admin-item-actions">
+                        <span class="admin-item-price">${data.price} грн</span>
+                        <button class="edit-btn" data-id="${productDoc.id}" data-price="${data.price}" title="Редагувати ціну">✏️</button>
+                        <button class="delete-btn" data-id="${productDoc.id}" data-img="${data.image}" title="Видалити">🗑</button>
+                    </div>
+                `;
+                fragment.appendChild(item);
+            }
         });
+
+        listContainer.innerHTML = '';
+        listContainer.appendChild(fragment);
     });
 }
 
 // --- 3. ЗАГАЛЬНІ ФУНКЦІЇ ---
+let currentFilter = 'all';
+
 function initFilters() {
     const filterButtons = document.querySelectorAll('.filter-btn');
-    const products = document.querySelectorAll('.product-card');
+    if (!filterButtons.length) return;
 
+    // Використовуємо делегування подій на батьківський контейнер (якщо він є), 
+    // або додаємо слухачі ОДИН раз
     filterButtons.forEach(button => {
-        button.addEventListener('click', () => {
+        button.addEventListener('click', (e) => {
             document.querySelector('.filter-btn.active')?.classList.remove('active');
-            button.classList.add('active');
-            const filter = button.getAttribute('data-filter').toLowerCase();
-
-            products.forEach(product => {
-                const category = product.getAttribute('data-category');
-                product.style.display = (filter === 'all' || category === filter) ? 'flex' : 'none';
-            });
+            e.target.classList.add('active');
+            currentFilter = e.target.dataset.filter.toLowerCase();
+            applyCurrentFilter();
         });
     });
 }
 
-// Логіка для акордеона (FAQ)
-const accordionItems = document.querySelectorAll('.accordion-item');
+function applyCurrentFilter() {
+    const products = document.querySelectorAll('.product-card');
+    products.forEach(product => {
+        const category = product.dataset.category;
+        product.style.display = (currentFilter === 'all' || category === currentFilter) ? 'flex' : 'none';
+    });
+}
 
-accordionItems.forEach(item => {
+// Делегування подій для кнопок "Замовити", "Редагувати" та "Видалити"
+document.addEventListener('click', (e) => {
+    // Кнопка "Замовити" на клієнті
+    if (e.target.closest('.order-btn')) {
+        const btn = e.target.closest('.order-btn');
+        openOrderModal(btn.dataset.title, btn.dataset.price);
+    }
+    // Кнопки адмінки
+    if (e.target.closest('.edit-btn')) {
+        const btn = e.target.closest('.edit-btn');
+        editPrice(btn.dataset.id, btn.dataset.price);
+    }
+    if (e.target.closest('.delete-btn')) {
+        const btn = e.target.closest('.delete-btn');
+        deleteProduct(btn.dataset.id, btn.dataset.img);
+    }
+});
+
+// Акордеон (FAQ)
+document.querySelectorAll('.accordion-item').forEach(item => {
     const question = item.querySelector('.accordion-question');
-    question.addEventListener('click', () => {
-        accordionItems.forEach(otherItem => {
+    question?.addEventListener('click', () => {
+        document.querySelectorAll('.accordion-item').forEach(otherItem => {
             if (otherItem !== item) otherItem.classList.remove('active');
         });
         item.classList.toggle('active');
     });
 });
 
-//модальне вікно
-window.openOrderModal = function(title, price) {
+// Модальне вікно замовлення
+window.openOrderModal = (title, price) => {
     const modalInfo = document.getElementById('modal-product-info');
-    if(modalInfo) modalInfo.innerText = `${title} — ${price} грн`;
+    if(modalInfo) modalInfo.textContent = `${title} — ${price} грн`;
+    
     const textMessage = encodeURIComponent(`Добрий день! Хочу замовити:\n${title}\nЦіна: ${price} грн.`);
     
     document.getElementById('btn-tg').href = `https://t.me/${CONTACT_INFO.tgUsername}?text=${textMessage}`;
     document.getElementById('btn-vb').href = `viber://chat?number=${CONTACT_INFO.phoneNumber.replace('+', '%2B')}`;
     document.getElementById('btn-ig').href = `https://instagram.com/${CONTACT_INFO.igUsername}`;
     document.getElementById('order-modal').style.display = 'flex';
-}
+};
 
 window.closeOrderModal = () => document.getElementById('order-modal').style.display = 'none';
 
+// Ініціалізація при завантаженні DOM
 document.addEventListener('DOMContentLoaded', () => {
     fetchAndRenderProducts();
+    initFilters();
     
     const burger = document.querySelector('.burger');
     const nav = document.querySelector('.nav-links');
-    if (burger && nav) {
-        burger.addEventListener('click', () => {
-            burger.classList.toggle('active');
-            nav.classList.toggle('active');
-        });
+    burger?.addEventListener('click', () => {
+        burger.classList.toggle('active');
+        nav.classList.toggle('active');
+    });
+    const searchInput = document.getElementById('searchArticul');
+    const categorySelect = document.getElementById('filterCategory');
+
+    if (searchInput) {
+        searchInput.addEventListener('input', renderAdminList);
+    }
+    if (categorySelect) {
+        categorySelect.addEventListener('change', renderAdminList);
     }
 });
 
-// 1. Ініціалізація автоматичного гортання фото в картках
-const swiper = new Swiper(".mySwiper", {
-    loop: true,
-    autoplay: {
-        delay: 3000,
-        disableOnInteraction: false,
-    },
-    effect: 'fade', // Плавний перехід між фото
-    fadeEffect: { crossFade: true }
-});
+// Swiper
+if (typeof Swiper !== 'undefined') {
+    new Swiper(".mySwiper", {
+        loop: true,
+        autoplay: { delay: 3000, disableOnInteraction: false },
+        effect: 'fade',
+        fadeEffect: { crossFade: true }
+    });
+}
 
-// 2. База даних твоїх проєктів
+// База даних проєктів (Portfolio)
 const projectsData = {
     project1: {
         title: "Проєкт 'Назва 1'",
         description: "Це детальний опис проєкту. Ми реалізували повний цикл розробки — від ідеї до фінального запуску. Використано технології HTML5, CSS3 та JavaScript.",
         results: "Завдяки нашому рішенню, клієнт отримав приріст нових користувачів на 45% за перший місяць.",
-        images: [
-            "https://picsum.photos/800/600?random=1",
-            "https://picsum.photos/800/600?random=2",
-            "https://picsum.photos/800/600?random=3",
-            "https://picsum.photos/800/600?random=4"
-        ]
+        images: ["https://picsum.photos/800/600?random=1"]
     }
-    // Сюди додавай project2, project3 і так далі...
 };
 
-// 3. Функція відкриття модального вікна
-function openModal(id) {
+window.openModal = (id) => {
     const data = projectsData[id];
+    if (!data) return;
+
     const modalBody = document.getElementById('modalBody');
     const modal = document.getElementById('projectModal');
 
-    // Формуємо HTML для галереї всередині модалки
-    let galleryHtml = data.images.map(img => `
-        <a href="${img}" class="glightbox">
-            <img src="${img}" alt="деталь фото">
-        </a>
+    const galleryHtml = data.images.map(img => `
+        <a href="${img}" class="glightbox"><img src="${img}" alt="деталь фото" loading="lazy"></a>
     `).join('');
 
-    // Наповнюємо модалку контентом
+    // Використовуємо textContent через DOM API для безпеки або санітизуємо
     modalBody.innerHTML = `
-        <h2 style="margin-top:0">${data.title}</h2>
-        <p style="font-size: 1.1rem; line-height: 1.6; color: #444;">${data.description}</p>
+        <h2 style="margin-top:0">${escapeHTML(data.title)}</h2>
+        <p style="font-size: 1.1rem; line-height: 1.6; color: #444;">${escapeHTML(data.description)}</p>
         <div style="background: #eef6ff; padding: 15px; border-radius: 10px; border-left: 5px solid #007bff;">
-            <strong>Результат:</strong> ${data.results}
+            <strong>Результат:</strong> ${escapeHTML(data.results)}
         </div>
         <h4 style="margin-top: 30px;">Галерея робіт (клікніть для перегляду):</h4>
         <div class="modal-gallery">${galleryHtml}</div>
     `;
 
-    // Показуємо вікно
     modal.style.display = 'flex';
 
-    // Активуємо GLightbox для новостворених картинок
-    const lightbox = GLightbox({
-        selector: '.glightbox',
-        touchNavigation: true,
-        loop: true
-    });
-}
+    if (typeof GLightbox !== 'undefined') {
+        GLightbox({ selector: '.glightbox', touchNavigation: true, loop: true });
+    }
+};
 
-// 4. Функція закриття
-function closeModal() {
-    document.getElementById('projectModal').style.display = 'none';
-}
+window.closeModal = () => document.getElementById('projectModal').style.display = 'none';
 
-// Закриття при кліку на фон
-window.onclick = function(event) {
+window.addEventListener('click', (event) => {
     const modal = document.getElementById('projectModal');
-    if (event.target == modal) closeModal();
+    if (event.target === modal) closeModal();
+});
+
+// Кнопка Back to Top з троттлінгом (Throttling) для оптимізації скролу
+const backToTop = document.getElementById('back-to-top');
+if (backToTop) {
+    let isScrolling = false;
+    window.addEventListener('scroll', () => {
+        if (!isScrolling) {
+            window.requestAnimationFrame(() => {
+                backToTop.classList.toggle('show', window.scrollY > 300);
+                isScrolling = false;
+            });
+            isScrolling = true;
+        }
+    }, { passive: true });
+
+    backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }

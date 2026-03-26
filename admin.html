@@ -49,6 +49,22 @@
 
         <div class="manage-section">
             <h3 class="section-title">Список товарів</h3>
+
+            <div class="admin-filters" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <input type="text" id="searchArticul" placeholder="Пошук за артикулом..." style="flex: 2;">
+                
+                <select id="filterCategory" class="admin-select" style="flex: 1; margin: 0;">
+                    <option value="all">Всі категорії</option>
+                    <option value="Каблучки">Каблучки</option>
+                    <option value="Сережки">Сережки</option>
+                    <option value="Підвіски">Підвіски</option>
+                    <option value="Набори">Набори</option>
+                    <option value="Браслети чоловічі">Браслети чоловічі</option>
+                    <option value="Браслети жіночі">Браслети жіночі</option>
+                    <option value="Шарми">Шарми</option>
+                </select>
+            </div>
+
             <div id="admin-product-list"></div>
         </div>
     </div>

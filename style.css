@@ -1,4 +1,6 @@
-/* --- 1. ГЛОБАЛЬНІ СТИЛІ ТА ЗМІННІ --- */
+/* ======================================
+   1. ЗМІННІ ТА БАЗОВІ СТИЛІ 
+   ====================================== */
 :root {
     --primary-pink: #ff2d8c;
     --saturated-pink: #ff2d8c;
@@ -15,21 +17,29 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+body {
+    background-color: var(--white);
+    color: var(--deep-berry);
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 25px;
 }
 
-/* --- 2. ШАПКА ТА НАВІГАЦІЯ --- */
+/* ======================================
+   2. LAYOUT (Розкладка)
+   ====================================== */
+/* --- Header & Nav --- */
 header { 
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    padding: 15px 0;
+    background: rgba(255, 255, 255, 0.95); 
+    backdrop-filter: blur(10px); 
+    padding: 15px 0; 
     position: fixed; 
     width: 100%; 
     z-index: 1000; 
-    border-bottom: 2px solid var(--primary-pink);
+    border-bottom: 2px solid var(--primary-pink); 
     box-shadow: 0 2px 10px rgba(141, 93, 102, 0.1);
 }
 
@@ -50,428 +60,32 @@ nav {
 
 .nav-links a { 
     color: var(--deep-berry); 
-    text-decoration: none;
+    text-decoration: none; 
     font-weight: 700; 
     text-transform: uppercase; 
     font-size: 13px; 
-    letter-spacing: 1px;
-    position: relative;
-    padding-bottom: 5px;
-    transition: 0.3s;
-}
-
-.nav-links a:hover { 
-    color: var(--primary-pink); 
-}
-
-.nav-links a::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 0;
-    height: 1px;
-    background: var(--saturated-pink);
-    transition: 0.3s;
-}
-
-.nav-links a:hover::after {
-    width: 100%;
-}
-
-/* --- 3. ЛОГОТИП (CSS Ring Logo) --- */
-.logo-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-}
-
-.css-logo {
-    width: 50px; 
-    height: 50px;
-    border: 2px solid var(--primary-pink);
-    border-radius: 50%;
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
+    letter-spacing: 1px; 
     position: relative; 
+    padding-bottom: 5px; 
+    transition: 0.3s;
 }
 
-.ring-detail {
-    position: absolute;
-    top: 2px;
-    right: 8px;
-    width: 6px;
-    height: 6px;
-    background: var(--saturated-pink);
-    border-radius: 50%;
-    box-shadow: 0 0 8px var(--saturated-pink);
-}
+.nav-links a:hover { color: var(--primary-pink); }
 
-.logo-divider {
-    width: 1px;
-    height: 35px;
-    background-color: var(--deep-berry); 
-    opacity: 0.4;
-    margin: 0 5px;
-}
-
-.logo-text {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    line-height: 1;
-}
-
-.word-top {
-    font-size: 22px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: var(--deep-berry);
-}
-
-.horizontal-line {
-    width: 100%;
-    height: 1px;
-    background-color: var(--primary-pink);
-    margin: 4px 0;
-    opacity: 0.6;
-}
-
-.word-bottom {
-    font-size: 11px;
-    font-weight: 300;
-    text-transform: uppercase;
-    letter-spacing: 5px;
-    color: var(--deep-berry);
-}
-
-/* --- 4. HERO SECTION --- */
-.hero { 
-    height: 100vh; 
-    background: linear-gradient(var(--overlay), var(--overlay)), 
-                url('img/Head.PNG') center/cover no-repeat;
-    background-color: var(--deep-berry);
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    text-align: center;
-}
-
-.hero-content { 
-    max-width: 800px; 
-    color: white; 
-}
-
-.hero h1 { 
-    font-size: 4rem; 
-    margin-bottom: 20px; 
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-shadow: 0 4px 20px rgba(0,0,0,0.6);
-}
-
-.hero p { 
-    font-size: 1.4rem; 
-    margin-bottom: 35px; 
-    opacity: 0.95;
-    text-shadow: 1px 1px 10px rgba(0,0,0,0.3);
-}
-
-.btn-main { 
-    display: inline-block; 
-    padding: 16px 45px; 
+.nav-links a::after { 
+    content: ''; 
+    position: absolute; 
+    bottom: 0; 
+    left: 0; 
+    width: 0; 
+    height: 1px; 
     background: var(--saturated-pink); 
-    color: var(--white); 
-    text-decoration: none; 
-    border-radius: 4px;
-    font-weight: 700; 
-    text-transform: uppercase; 
-    letter-spacing: 1.5px;
-    transition: 0.4s; 
-    border: 2px solid var(--saturated-pink);
-    box-shadow: 0 4px 15px rgba(255, 45, 140, 0.4);
-}
-
-.btn-main:hover { 
-    background: transparent; 
-    transform: translateY(-3px); 
-    box-shadow: 0 6px 20px rgba(255, 45, 140, 0.6);
-}
-
-/* --- 5. КАТАЛОГ ТА ТОВАРИ --- */
-.section-title { 
-    text-align: center; 
-    margin: 80px 0 50px; 
-    font-size: 2.5rem; 
-    color: var(--deep-berry); 
-}
-
-#product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 30px;
-    margin-top: 40px;
-}
-
-.product-card {
-    background: var(--white);
-    border-radius: 16px;
-    padding: 20px;
-    text-align: center;
-    border: 1px solid #fceef2;
-    transition: 0.3s ease;
-    display: flex; 
-    flex-direction: column;
-    height: 100%; 
-}
-
-.product-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 30px rgba(141, 93, 102, 0.1);
-    border-color: var(--primary-pink);
-}
-
-.product-img {
-    width: 100%;
-    border-radius: 12px;
-    overflow: hidden;
-    margin-bottom: 15px;
-}
-
-.product-img img {
-    width: 100%;
-    aspect-ratio: 1/1;
-    object-fit: cover;
-    transition: 0.5s ease;
-}
-
-.product-card:hover .product-img img {
-    transform: scale(1.05);
-}
-
-.product-desc {
-    font-size: 10px;
-    color: #a0a0a0;
-    margin: 5px 0 15px 0;
-    line-height: 1.3;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.price {
-    margin-top: auto;
-    font-weight: bold;
-    color: var(--primary-pink) !important;
-    font-size: 1.4rem !important;
-    padding-top: 15px;
-}
-
-.order-btn {
-    margin-top: 15px;
-    width: 100%;
-    padding: 14px;
-    background: var(--deep-berry);
-    color: var(--white);
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.3s;
-    font-weight: 600;
-    text-transform: uppercase;
-}
-
-.order-btn:hover {
-    background: var(--primary-pink);
-}
-
-/* --- 6. ФІЛЬТРИ --- */
-.filters {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 15px;
-    margin-bottom: 40px;
-}
-
-.filter-btn {
-    padding: 12px 25px;
-    background: transparent;
-    border: 2px solid var(--primary-pink);
-    color: var(--deep-berry);
-    border-radius: 30px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: 0.3s;
-    text-transform: uppercase;
-}
-
-.filter-btn.active, .filter-btn:hover {
-    background-color: var(--primary-pink);
-    color: var(--white);
-}
-
-/* --- 7. FAQ ТА ІНФО --- */
-.info-page { padding-top: 120px; padding-bottom: 80px; }
-.info-section { margin-bottom: 60px; }
-
-.accordion-header-main {
-    background-color: #fceef2;
-    padding: 15px 25px;
-    border-radius: 12px;
-    font-weight: 700;
-    color: var(--deep-berry);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin: 30px 0 15px 0;
-    text-transform: uppercase;
-}
-
-.accordion-item {
-    background: #fff;
-    border: 1px solid #f0f0f0;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    overflow: hidden;
-}
-
-.accordion-question {
-    padding: 18px 25px;
-    cursor: pointer;
-    font-weight: 600;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: var(--deep-berry);
-}
-
-.accordion-item.active .accordion-answer {
-    padding: 15px 25px 25px 25px;
-    max-height: 500px;
-}
-
-.accordion-answer {
-    padding: 0 25px;
-    max-height: 0;
-    overflow: hidden;
-    transition: 0.3s ease-out;
-    color: #666;
-    line-height: 1.6;
-}
-
-/* Перевертання стрілочки при відкритті */
-.accordion-item.active .arrow {
-    transform: rotate(180deg);
-}
-
-.arrow {
-    transition: transform 0.3s ease;
-}
-
-/* --- 8. КОНТАКТНІ КНОПКИ ТА МОДАЛКА --- */
-.modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.5); 
-    backdrop-filter: blur(4px); 
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
-}
-
-.modal-content {
-    background: white;
-    padding: 40px 30px 30px;
-    border-radius: 16px;
-    text-align: center;
-    width: 90%;
-    max-width: 360px;
-    position: relative;
-    box-shadow: 0 15px 35px rgba(74, 42, 47, 0.2); /* Глибока тінь в тон бренду */
-    animation: modalFadeIn 0.3s ease-out forwards; /* Анімація появи */
-}
-
-@keyframes modalFadeIn {
-    from { opacity: 0; transform: translateY(20px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-.close-modal {
-    position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 28px;
-    color: #a0a0a0;
-    cursor: pointer;
-    line-height: 1;
     transition: 0.3s;
 }
 
-.close-modal:hover {
-    color: var(--primary-pink);
-    transform: rotate(90deg);
-}
+.nav-links a:hover::after { width: 100%; }
 
-.modal-content h3 {
-    color: var(--deep-berry);
-    margin-bottom: 10px;
-    font-size: 1.4rem;
-}
-
-.modal-product-name {
-    font-weight: 700;
-    color: var(--primary-pink);
-    font-size: 1.1rem;
-    margin-bottom: 10px;
-}
-
-.modal-prompt {
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 25px;
-    line-height: 1.4;
-}
-
-.modal-buttons {
-    display: flex;
-    flex-direction: column; 
-    gap: 12px;
-}
-
-.modal-btn {
-    display: block;
-    padding: 14px 20px;
-    color: white;
-    text-decoration: none;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 14px;
-    letter-spacing: 1px;
-    transition: 0.3s;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-
-.modal-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-    color: white;
-}
-
-/* Фірмові кольори кнопок */
-.btn-tg { background-color: #2AABEE; }
-.btn-vb { background-color: #7360f2; }
-.btn-ig { background: linear-gradient(45deg, #f09433 0%, #dc2743 50%, #bc1888 100%); }
-
-/* --- 9. ФУТЕР --- */
+/* --- Footer --- */
 .main-footer {
     background-color: var(--white);
     padding: 80px 0 0;
@@ -479,7 +93,6 @@ nav {
     margin-top: 100px;
 }
 
-/* --- ОПИС У ФУТЕРІ --- */
 .footer-desc {
     margin: 10px 0 20px 0; 
     font-size: 13px;
@@ -493,13 +106,22 @@ nav {
     display: grid;
     grid-template-columns: 1.5fr 1fr 1fr 1fr 1.2fr;
     gap: 40px;
-    padding-bottom: 60px;
+    align-items: start;
+    padding: 60px 0;
+}
+
+.footer-col {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .footer-col h4 {
+    margin-bottom: 10px;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    white-space: nowrap; 
     text-transform: uppercase;
-    font-size: 14px;
-    margin-bottom: 25px;
     color: var(--deep-berry);
 }
 
@@ -508,17 +130,196 @@ nav {
 .footer-col ul li a { text-decoration: none; color: #666; transition: 0.3s; }
 .footer-col ul li a:hover { color: var(--primary-pink); padding-left: 5px; }
 
-.footer-socials { display: flex; gap: 15px; }
-.footer-socials a {
-    width: 35px; height: 35px; border: 1px solid #ddd; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    text-decoration: none; color: var(--deep-berry); transition: 0.3s;
-}
+.footer-socials { display: flex; gap: 15px; align-items: center; padding-top: 20px; }
+.footer-socials a { display: flex; justify-content: center; align-items: center; width: 48px; height: 48px; border-radius: 50%; color: var(--white); text-decoration: none; font-size: 22px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+.footer-socials a[aria-label*="Instagram"] { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #f56040 45%, #d6249f 60%, #285AEB 90%); }
+.footer-socials a[aria-label*="Viber"] { background-color: #7360f2; }
+.footer-socials a[aria-label*="Telegram"] { background-color: #0088cc; }
+.footer-socials a:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); filter: brightness(0.85); }
+.footer-socials a:hover i { transform: scale(1.1); transition: transform 0.3s ease; }
 
 .footer-bottom { background-color: #f9f9f9; padding: 25px 0; border-top: 1px solid #eee; }
 .bottom-flex { display: flex; justify-content: space-between; align-items: center; }
 
-/* --- 10. АДАПТИВНІСТЬ --- */
+/* ======================================
+   3. КОМПОНЕНТИ (UI)
+   ====================================== */
+/* --- Logo --- */
+.logo-wrapper {
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none; transition: opacity 0.3s ease;
+}
+.logo-wrapper:hover { opacity: 0.8; }
+.logo-img { display: block; height: 48px; width: auto; object-fit: contain; }
+.logo-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
+.word-top { font-size: 22px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--deep-berry); }
+.horizontal-line { width: 100%; height: 1px; background-color: var(--primary-pink); margin: 2px 0 4px 0; opacity: 0.6; }
+.word-bottom { font-size: 10px; font-weight: 300; text-transform: uppercase; letter-spacing: 4.5px; color: var(--deep-berry); }
+
+/* --- Buttons --- */
+.btn-main { 
+    display: inline-block; padding: 16px 45px; background: var(--saturated-pink); color: var(--white); 
+    text-decoration: none; border-radius: 50px; font-weight: 700; text-transform: uppercase; 
+    letter-spacing: 1.5px; transition: 0.4s; border: none; box-shadow: 0 0 45px 5px rgba(255, 45, 140, 0.5); 
+}
+.btn-main:hover { transform: translateY(-3px); box-shadow: 0 0 45px 8px rgba(255, 45, 140, 0.7); }
+
+.filter-btn {
+    padding: 12px 25px; background: transparent; border: 2px solid var(--primary-pink); 
+    color: var(--deep-berry); border-radius: 30px; font-weight: 600; cursor: pointer; 
+    transition: 0.3s; text-transform: uppercase;
+}
+.filter-btn.active, .filter-btn:hover { background-color: var(--primary-pink); color: var(--white); }
+
+.order-btn {
+    margin-top: 15px; width: 100%; padding: 14px; background: var(--deep-berry); 
+    color: var(--white); border: none; border-radius: 8px; cursor: pointer; 
+    transition: 0.3s; font-weight: 600; text-transform: uppercase;
+}
+.order-btn:hover { background: var(--primary-pink); }
+
+.back-to-top {
+    position: fixed; bottom: 30px; right: 30px; width: 45px; height: 45px;
+    background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 50%; color: #333; 
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s ease; opacity: 0; visibility: hidden; z-index: 1000;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+.back-to-top.show { opacity: 1; visibility: visible; }
+.back-to-top:hover { background: rgba(255, 255, 255, 0.3); transform: translateY(-5px); }
+
+/* --- Modal --- */
+.modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); z-index: 2000;
+    align-items: center; justify-content: center;
+}
+.modal-content {
+    background: white; padding: 40px 30px 30px; border-radius: 16px; text-align: center;
+    width: 90%; max-width: 360px; position: relative; box-shadow: 0 15px 35px rgba(74, 42, 47, 0.2); 
+    animation: modalFadeIn 0.3s ease-out forwards; 
+}
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.close-modal {
+    position: absolute; top: 15px; right: 20px; font-size: 28px; color: #a0a0a0;
+    cursor: pointer; line-height: 1; transition: 0.3s;
+}
+.close-modal:hover { color: var(--primary-pink); transform: rotate(90deg); }
+.modal-content h3 { color: var(--deep-berry); margin-bottom: 10px; font-size: 1.4rem; }
+.modal-product-name { font-weight: 700; color: var(--primary-pink); font-size: 1.1rem; margin-bottom: 10px; }
+.modal-prompt { font-size: 13px; color: #666; margin-bottom: 25px; line-height: 1.4; }
+.modal-buttons { display: flex; flex-direction: column; gap: 12px; }
+.modal-btn {
+    display: block; padding: 14px 20px; color: white; text-decoration: none;
+    border-radius: 10px; font-weight: 600; font-size: 14px; letter-spacing: 1px;
+    transition: 0.3s; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.modal-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+.btn-tg { background-color: #2AABEE; }
+.btn-vb { background-color: #7360f2; }
+.btn-ig { background: linear-gradient(45deg, #f09433 0%, #dc2743 50%, #bc1888 100%); }
+
+/* --- Accordion (FAQ) --- */
+.accordion-header-main {
+    background-color: #fceef2; padding: 15px 25px; border-radius: 12px; font-weight: 700;
+    color: var(--deep-berry); display: flex; align-items: center; gap: 15px;
+    margin: 30px 0 15px 0; text-transform: uppercase;
+}
+.accordion-item { background: #fff; border: 1px solid #f0f0f0; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+.accordion-question {
+    padding: 18px 25px; cursor: pointer; font-weight: 600; display: flex;
+    justify-content: space-between; align-items: center; color: var(--deep-berry);
+}
+.accordion-item.active .accordion-answer { padding: 15px 25px 25px 25px; max-height: 500px; }
+.accordion-answer { padding: 0 25px; max-height: 0; overflow: hidden; transition: 0.3s ease-out; color: #666; line-height: 1.6; }
+.accordion-item.active .arrow { transform: rotate(180deg); }
+.arrow { transition: transform 0.3s ease; }
+
+/* ======================================
+   4. СТОРІНКИ 
+   ====================================== */
+/* --- Hero --- */
+.hero { 
+    height: 100vh; 
+    background: linear-gradient(var(--overlay), var(--overlay)), url('img/Head.PNG') center/cover no-repeat;
+    background-color: var(--deep-berry); display: flex; align-items: center; 
+    justify-content: center; text-align: center;
+}
+.hero-content { max-width: 800px; color: white; }
+.hero h1 { font-size: 4rem; margin-bottom: 20px; font-weight: 700; letter-spacing: 2px; text-shadow: 0 4px 20px rgba(0,0,0,0.6); }
+.hero p { font-size: 1.4rem; margin-bottom: 35px; opacity: 0.95; text-shadow: 1px 1px 10px rgba(0,0,0,0.3); }
+
+/* --- Catalog & Products --- */
+.section-title { text-align: center; margin: 80px 0 50px; font-size: 2.5rem; color: var(--deep-berry); }
+.filters { display: flex; justify-content: center; flex-wrap: wrap; gap: 15px; margin-bottom: 40px; }
+#product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 30px; margin-top: 40px; }
+.product-card {
+    background: var(--white); border-radius: 16px; padding: 20px; text-align: center;
+    border: 1px solid #fceef2; transition: 0.3s ease; display: flex; flex-direction: column; height: 100%; 
+}
+.product-card:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(141, 93, 102, 0.1); border-color: var(--primary-pink); }
+.product-img { width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 15px; }
+.product-img img { width: 100%; aspect-ratio: 1/1; object-fit: cover; transition: 0.5s ease; }
+.product-card:hover .product-img img { transform: scale(1.05); }
+.product-desc {
+    font-size: 10px; color: #a0a0a0; margin: 5px 0 15px 0; line-height: 1.3;
+    text-transform: uppercase; letter-spacing: 0.5px; display: -webkit-box;
+    -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.price { margin-top: auto; font-weight: bold; color: var(--primary-pink) !important; font-size: 1.4rem !important; padding-top: 15px; }
+
+/* --- FAQ / Info --- */
+.info-page { padding-top: 120px; padding-bottom: 80px; }
+.info-section { margin-bottom: 60px; }
+
+/* ======================================
+   5. АДМІН-ПАНЕЛЬ 
+   ====================================== */
+.admin-container { max-width: 800px; margin: 120px auto 40px; padding: 20px; display: none; }
+.login-overlay { 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; 
+    display: flex; align-items: center; justify-content: center; z-index: 2000; 
+}
+.login-box { 
+    width: 350px; padding: 30px; border: 1px solid #ddd; border-radius: 15px; 
+    text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+}
+.login-box input, .admin-form input, .admin-select, .admin-textarea { 
+    width: 100%; margin-bottom: 15px; padding: 12px; border-radius: 8px; 
+    border: 1px solid #ddd; box-sizing: border-box; font-size: 14px;
+}
+.admin-form { background: #fff; padding: 30px; border: 1px solid var(--primary-pink); border-radius: 15px; margin-bottom: 40px; }
+.admin-product-item { 
+    display: flex; align-items: center; justify-content: space-between; padding: 15px; 
+    border-bottom: 1px solid #eee; background: #fdfdfd; margin-bottom: 10px; border-radius: 10px; 
+}
+.delete-btn { background: #ff4d4d; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+.delete-btn:hover { background: #cc0000; }
+.logout-btn { background: #eee; border: none; padding: 8px 15px; cursor: pointer; border-radius: 5px; float: right; font-weight: 600; }
+.error-msg { color: red; font-size: 12px; margin-top: 10px; }
+.status-msg { text-align: center; margin-top: 10px; font-weight: 600; color: var(--primary-pink); }
+.admin-item-info { display: flex; align-items: center; gap: 12px; }
+.admin-item-thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
+.admin-item-text { display: flex; flex-direction: column; }
+.admin-item-title { font-weight: 600; font-size: 14px; color: var(--deep-berry); }
+.admin-item-sku { font-size: 11px; color: #888; margin-top: 2px; }
+.admin-item-actions { display: flex; align-items: center; gap: 10px; }
+.admin-item-price { font-weight: 700; color: var(--primary-pink); margin-right: 5px; }
+.edit-btn { background: #f0f0f0; border: none; padding: 8px; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+.edit-btn:hover { background: #e0e0e0; }
+
+/* ======================================
+   6. АДАПТИВНІСТЬ (Media Queries)
+   ====================================== */
+@media (max-width: 992px) {
+    .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; }
+    .about-col { grid-column: span 2; margin-bottom: 20px; }
+}
+
 @media (max-width: 768px) {
     .burger { display: block; position: relative; width: 30px; height: 20px; cursor: pointer; z-index: 1001; }
     .burger span, .burger::before, .burger::after {
@@ -541,118 +342,18 @@ nav {
     .nav-links.active { right: 0; }
     .nav-links li { margin: 15px 0; }
     .hero h1 { font-size: 2.2rem; }
-    .footer-grid { grid-template-columns: 1fr; text-align: center; }
-    .footer-socials { justify-content: center; }
-    .bottom-flex { flex-direction: column; gap: 15px; }
     .info-page { padding-top: 100px !important; }
+
+    .back-to-top { bottom: 20px; right: 20px; width: 40px; height: 40px; }
 }
 
 @media (min-width: 769px) {
     .burger { display: none; }
 }
 
-/* --- 11. АДМІН-ПАНЕЛЬ --- */
-.admin-container { 
-    max-width: 800px; 
-    margin: 120px auto 40px; 
-    padding: 20px; 
-    display: none; /* Показується після логіну */
+@media (max-width: 576px) {
+    .footer-grid { grid-template-columns: 1fr; text-align: center; }
+    .footer-socials { justify-content: center; }
+    .bottom-flex { flex-direction: column; gap: 15px; }
 }
 
-.login-overlay { 
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-    background: white; display: flex; align-items: center; justify-content: center; z-index: 2000; 
-}
-
-.login-box { 
-    width: 350px; padding: 30px; border: 1px solid #ddd; border-radius: 15px; 
-    text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
-}
-
-.login-box input, .admin-form input, .admin-select, .admin-textarea { 
-    width: 100%; margin-bottom: 15px; padding: 12px; border-radius: 8px; 
-    border: 1px solid #ddd; box-sizing: border-box; font-size: 14px;
-}
-
-.admin-form { 
-    background: #fff; padding: 30px; border: 1px solid var(--primary-pink); 
-    border-radius: 15px; margin-bottom: 40px; 
-}
-
-.admin-product-item { 
-    display: flex; align-items: center; justify-content: space-between; 
-    padding: 15px; border-bottom: 1px solid #eee; background: #fdfdfd; 
-    margin-bottom: 10px; border-radius: 10px; 
-}
-
-.delete-btn { 
-    background: #ff4d4d; color: white; border: none; padding: 8px 15px; 
-    border-radius: 5px; cursor: pointer; transition: 0.3s;
-}
-
-.delete-btn:hover { background: #cc0000; }
-
-.logout-btn { 
-    background: #eee; border: none; padding: 8px 15px; cursor: pointer; 
-    border-radius: 5px; float: right; font-weight: 600;
-}
-
-.error-msg { color: red; font-size: 12px; margin-top: 10px; }
-.status-msg { text-align: center; margin-top: 10px; font-weight: 600; color: var(--primary-pink); }
-
-/* Додаткові стилі для списку товарів в адмінці */
-.admin-item-info {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.admin-item-thumb {
-    width: 50px;
-    height: 50px;
-    object-fit: cover;
-    border-radius: 6px;
-    border: 1px solid #eee;
-}
-
-.admin-item-text {
-    display: flex;
-    flex-direction: column;
-}
-
-.admin-item-title {
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--deep-berry);
-}
-
-.admin-item-sku {
-    font-size: 11px;
-    color: #888;
-    margin-top: 2px;
-}
-
-.admin-item-actions {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.admin-item-price {
-    font-weight: 700;
-    color: var(--primary-pink);
-    margin-right: 5px;
-}
-
-.edit-btn {
-    background: #f0f0f0;
-    border: none;
-    padding: 8px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.edit-btn:hover {
-    background: #e0e0e0;
-}
