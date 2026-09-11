@@ -20,7 +20,6 @@ const auth = getAuth(app);
 
 const CONTACT_INFO = {
     tgUsername: "solomia_ka",
-    igUsername: "silveri_jewelry_ua",
     phoneNumber: "+380680243337"
 };
 
@@ -292,7 +291,7 @@ window.openOrderModal = (title, price) => {
     
     document.getElementById('btn-tg').href = `https://t.me/${CONTACT_INFO.tgUsername}?text=${textMessage}`;
     document.getElementById('btn-vb').href = `viber://chat?number=${CONTACT_INFO.phoneNumber.replace('+', '%2B')}`;
-    document.getElementById('btn-ig').href = `https://instagram.com/${CONTACT_INFO.igUsername}`;
+
     document.getElementById('order-modal').style.display = 'flex';
 };
 
