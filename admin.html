@@ -23,14 +23,151 @@
         <button class="logout-btn" onclick="logout()">Вийти</button>
         <h2 style="margin-bottom: 30px;">Вітаємо, Адмін!</h2>
 
-        <div class="admin-form">
-            <h3 class="section-title" style="margin-top: 0;">Додати новий товар</h3>
-            <input type="text" id="prodId" placeholder="Артикул">
-            <input type="text" id="prodTitle" placeholder="Назва">
-            <input type="number" id="prodPrice" placeholder="Ціна (грн)">
-            
-            <select id="prodCategory" class="admin-select">
-                <option value="" disabled selected>Оберіть категорію</option>
+        <div class="admin-tabs">
+            <button class="admin-tab-btn active" data-tab="products">Товари</button>
+            <button class="admin-tab-btn" data-tab="orders">Замовлення <span id="new-orders-badge" class="admin-tab-badge" hidden>0</span></button>
+            <button class="admin-tab-btn" data-tab="reviews">Відгуки</button>
+        </div>
+
+        <div id="tab-products" class="admin-tab-panel">
+            <div class="admin-form">
+                <h3 class="section-title" style="margin-top: 0;">Додати новий товар</h3>
+                <input type="text" id="prodId" placeholder="Артикул">
+                <input type="text" id="prodTitle" placeholder="Назва">
+                <input type="number" id="prodPrice" placeholder="Ціна (грн)">
+
+                <select id="prodCategory" class="admin-select">
+                    <option value="" disabled selected>Оберіть категорію</option>
+                    <option value="Каблучки">Каблучки</option>
+                    <option value="Сережки">Сережки</option>
+                    <option value="Підвіски">Підвіски</option>
+                    <option value="Набори">Набори</option>
+                    <option value="Браслети чоловічі">Браслети чоловічі</option>
+                    <option value="Браслети жіночі">Браслети жіночі</option>
+                    <option value="Шарми">Шарми</option>
+                </select>
+
+                <textarea id="prodDesc" placeholder="Опис" class="admin-textarea"></textarea>
+
+                <div class="admin-form-row">
+                    <input type="text" id="prodWeight" placeholder="Вага (напр. 3.2 г)">
+                    <input type="text" id="prodSize" placeholder="Розмір (напр. 17)">
+                </div>
+                <div class="admin-form-row">
+                    <input type="text" id="prodPurity" placeholder="Проба (напр. 925)" value="925">
+                    <input type="text" id="prodCoating" placeholder="Покриття (напр. родіювання)">
+                </div>
+
+                <input type="file" id="prodImg" accept="image/*" style="margin-bottom: 15px;">
+
+                <label class="featured-checkbox">
+                    <input type="checkbox" id="prodFeatured">
+                    Показувати в блоці "Популярні товари" на головній
+                </label>
+
+                <label class="featured-checkbox">
+                    <input type="checkbox" id="prodInStock" checked>
+                    В наявності
+                </label>
+
+                <button class="order-btn" style="width: 100%;" onclick="uploadProduct()">Завантажити</button>
+                <p id="status" class="status-msg"></p>
+            </div>
+
+            <div class="manage-section">
+                <h3 class="section-title">Список товарів</h3>
+
+                <div class="admin-filters" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <input type="text" id="searchArticul" placeholder="Пошук за артикулом..." style="flex: 2;">
+
+                    <select id="filterCategory" class="admin-select" style="flex: 1; margin: 0;">
+                        <option value="all">Всі категорії</option>
+                        <option value="Каблучки">Каблучки</option>
+                        <option value="Сережки">Сережки</option>
+                        <option value="Підвіски">Підвіски</option>
+                        <option value="Набори">Набори</option>
+                        <option value="Браслети чоловічі">Браслети чоловічі</option>
+                        <option value="Браслети жіночі">Браслети жіночі</option>
+                        <option value="Шарми">Шарми</option>
+                    </select>
+                </div>
+
+                <div id="admin-product-list"></div>
+            </div>
+        </div>
+
+        <div id="tab-orders" class="admin-tab-panel" hidden>
+            <h3 class="section-title" style="margin-top: 0;">Замовлення</h3>
+
+            <div class="admin-filters" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <select id="orderStatusFilter" class="admin-select" style="margin: 0;">
+                    <option value="all">Всі статуси</option>
+                    <option value="new">Нові</option>
+                    <option value="processing">В обробці</option>
+                    <option value="shipped">Відправлено</option>
+                    <option value="done">Виконано</option>
+                    <option value="cancelled">Скасовано</option>
+                </select>
+            </div>
+
+            <div id="admin-orders-list"></div>
+        </div>
+
+        <div id="tab-reviews" class="admin-tab-panel" hidden>
+            <div class="admin-form">
+                <h3 class="section-title" style="margin-top: 0;">Додати відгук</h3>
+
+                <input type="text" id="reviewName" placeholder="Ім'я клієнта">
+                <textarea id="reviewText" placeholder="Текст відгуку" class="admin-textarea"></textarea>
+
+                <label for="reviewRating" style="display:block; font-size:0.9rem; font-weight:600; color:var(--deep-berry); margin-bottom:6px;">Оцінка</label>
+                <select id="reviewRating" class="admin-select">
+                    <option value="5">★★★★★ (5)</option>
+                    <option value="4">★★★★☆ (4)</option>
+                    <option value="3">★★★☆☆ (3)</option>
+                    <option value="2">★★☆☆☆ (2)</option>
+                    <option value="1">★☆☆☆☆ (1)</option>
+                </select>
+
+                <select id="reviewSource" class="admin-select">
+                    <option value="instagram">Instagram</option>
+                    <option value="telegram">Telegram</option>
+                    <option value="google">Google</option>
+                    <option value="site">Сайт</option>
+                </select>
+
+                <input type="text" id="reviewLink" placeholder="Посилання на Instagram (необов'язково)">
+                <input type="file" id="reviewImg" accept="image/*" style="margin-bottom: 15px;">
+
+                <label class="featured-checkbox">
+                    <input type="checkbox" id="reviewPublished" checked>
+                    Показувати на сайті
+                </label>
+
+                <button class="order-btn" style="width: 100%;" onclick="uploadReview()">Додати відгук</button>
+                <p id="reviewStatus" class="status-msg"></p>
+            </div>
+
+            <div class="manage-section">
+                <h3 class="section-title">Список відгуків</h3>
+                <div id="admin-reviews-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-modal" class="modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+        <div class="modal-content edit-modal-content">
+            <button class="close-modal" aria-label="Закрити" onclick="closeEditModal()">&times;</button>
+            <h3 id="edit-modal-title">Редагувати товар</h3>
+
+            <input type="hidden" id="editDocId">
+            <input type="hidden" id="editOriginalId">
+
+            <input type="text" id="editId" placeholder="Артикул">
+            <input type="text" id="editTitle" placeholder="Назва">
+            <input type="number" id="editPrice" placeholder="Ціна (грн)">
+
+            <select id="editCategory" class="admin-select">
                 <option value="Каблучки">Каблучки</option>
                 <option value="Сережки">Сережки</option>
                 <option value="Підвіски">Підвіски</option>
@@ -40,32 +177,77 @@
                 <option value="Шарми">Шарми</option>
             </select>
 
-            <textarea id="prodDesc" placeholder="Опис" class="admin-textarea"></textarea>
-            <input type="file" id="prodImg" accept="image/*" style="margin-bottom: 15px;">
-            
-            <button class="order-btn" style="width: 100%;" onclick="uploadProduct()">Завантажити</button>
-            <p id="status" class="status-msg"></p>
-        </div>
+            <textarea id="editDesc" placeholder="Опис" class="admin-textarea"></textarea>
 
-        <div class="manage-section">
-            <h3 class="section-title">Список товарів</h3>
-
-            <div class="admin-filters" style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <input type="text" id="searchArticul" placeholder="Пошук за артикулом..." style="flex: 2;">
-                
-                <select id="filterCategory" class="admin-select" style="flex: 1; margin: 0;">
-                    <option value="all">Всі категорії</option>
-                    <option value="Каблучки">Каблучки</option>
-                    <option value="Сережки">Сережки</option>
-                    <option value="Підвіски">Підвіски</option>
-                    <option value="Набори">Набори</option>
-                    <option value="Браслети чоловічі">Браслети чоловічі</option>
-                    <option value="Браслети жіночі">Браслети жіночі</option>
-                    <option value="Шарми">Шарми</option>
-                </select>
+            <div class="admin-form-row">
+                <input type="text" id="editWeight" placeholder="Вага (напр. 3.2 г)">
+                <input type="text" id="editSize" placeholder="Розмір (напр. 17)">
+            </div>
+            <div class="admin-form-row">
+                <input type="text" id="editPurity" placeholder="Проба (напр. 925)">
+                <input type="text" id="editCoating" placeholder="Покриття (напр. родіювання)">
             </div>
 
-            <div id="admin-product-list"></div>
+            <div class="edit-current-photo">
+                <img id="editCurrentImg" src="" alt="Поточне фото товару">
+                <span>Поточне фото — оберіть нове нижче, щоб замінити</span>
+            </div>
+            <input type="file" id="editImg" accept="image/*" style="margin-bottom: 15px;">
+
+            <label class="featured-checkbox">
+                <input type="checkbox" id="editFeatured">
+                Показувати в блоці "Популярні товари"
+            </label>
+            <label class="featured-checkbox">
+                <input type="checkbox" id="editInStock">
+                В наявності
+            </label>
+
+            <p id="editStatus" class="status-msg"></p>
+            <button class="order-btn" style="width: 100%;" onclick="saveProductEdit()">Зберегти зміни</button>
+        </div>
+    </div>
+
+    <div id="edit-review-modal" class="modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="edit-review-modal-title">
+        <div class="modal-content edit-modal-content">
+            <button class="close-modal" aria-label="Закрити" onclick="closeEditReviewModal()">&times;</button>
+            <h3 id="edit-review-modal-title">Редагувати відгук</h3>
+
+            <input type="hidden" id="editReviewDocId">
+
+            <input type="text" id="editReviewName" placeholder="Ім'я клієнта">
+            <textarea id="editReviewText" placeholder="Текст відгуку" class="admin-textarea"></textarea>
+
+            <select id="editReviewRating" class="admin-select">
+                <option value="5">★★★★★ (5)</option>
+                <option value="4">★★★★☆ (4)</option>
+                <option value="3">★★★☆☆ (3)</option>
+                <option value="2">★★☆☆☆ (2)</option>
+                <option value="1">★☆☆☆☆ (1)</option>
+            </select>
+
+            <select id="editReviewSource" class="admin-select">
+                <option value="instagram">Instagram</option>
+                <option value="telegram">Telegram</option>
+                <option value="google">Google</option>
+                <option value="site">Сайт</option>
+            </select>
+
+            <input type="text" id="editReviewLink" placeholder="Посилання на Instagram (необов'язково)">
+
+            <div class="edit-current-photo">
+                <img id="editReviewCurrentImg" src="" alt="Поточне фото відгуку">
+                <span>Поточне фото — оберіть нове нижче, щоб замінити</span>
+            </div>
+            <input type="file" id="editReviewImg" accept="image/*" style="margin-bottom: 15px;">
+
+            <label class="featured-checkbox">
+                <input type="checkbox" id="editReviewPublished">
+                Показувати на сайті
+            </label>
+
+            <p id="editReviewStatus" class="status-msg"></p>
+            <button class="order-btn" style="width: 100%;" onclick="saveReviewEdit()">Зберегти зміни</button>
         </div>
     </div>
 
