@@ -20,7 +20,7 @@ const app = initializeApp(firebaseConfig);
 // сайту, а не зі скрипта/бота. reCAPTCHA v3 — невидима для відвідувача,
 // нічого показувати чи клікати не треба.
 initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider('6Lc7m7wtAAAAALbkOTY1oe28WmkflgMxdZJ-yyqz'),
+    provider: new ReCaptchaEnterpriseProvider('6Lc7m7wtAAAAALbkOTY1oe28WmkfIgMxdZJ-yyqz'),
     isTokenAutoRefreshEnabled: true
 });
 
