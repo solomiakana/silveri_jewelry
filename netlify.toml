@@ -1,0 +1,22 @@
+# Netlify Functions (серверна частина — кешування даних доставки Нової пошти)
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Чисті URL для сторінки товару: /product/АРТИКУЛ замість /product.html?id=АРТИКУЛ
+[[redirects]]
+  from = "/product/:id"
+  to = "/product.html?id=:id"
+  status = 200
+
+# Чистий URL для оформлення замовлення: /checkout замість /checkout.html
+[[redirects]]
+  from = "/checkout"
+  to = "/checkout.html"
+  status = 200
+
+# Чистий URL для каталогу: /catalog замість /catalog.html
+[[redirects]]
+  from = "/catalog"
+  to = "/catalog.html"
+  status = 200

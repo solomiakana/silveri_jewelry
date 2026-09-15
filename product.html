@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Товар | Silveri Jewelry</title>
+    <meta name="description" content="Срібна прикраса Silveri Jewelry — срібло 925 проби.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:type" content="product">
+    <meta property="og:title" content="Silveri Jewelry">
+    <meta property="og:description" content="Срібна прикраса Silveri Jewelry.">
+    <meta property="og:image" content="https://silveri.com.ua/img/og-image.jpg">
+    <meta property="og:site_name" content="Silveri Jewelry">
+    <meta property="og:locale" content="uk_UA">
+
+    <link rel="icon" type="image/x-icon" href="img/logo.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link rel="preload" href="img/logo1.webp" as="image" type="image/webp">
+    <link rel="stylesheet" href="style.css">
+    <script src="analytics.js"></script>
+</head>
+<body>
+
+<header>
+    <nav class="container">
+        <a href="index.html#hero" class="logo-wrapper" aria-label="На головну сторінку Silveri Jewelry">
+            <img src="img/logo1.webp" alt="Логотип Silveri Jewelry" class="logo-img" width="50" height="50" fetchpriority="high">
+            <div class="logo-text">
+                <span class="word-top">Silveri</span>
+                <div class="horizontal-line"></div>
+                <span class="word-bottom">jewelry</span>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="index.html#hero">Головна</a></li>
+            <li><a href="catalog.html">Каталог</a></li>
+            <li><a href="faq.html#about">Про нас</a></li>
+            <li><a href="faq.html#delivery">Доставка та оплата</a></li>
+            <li><a href="faq.html#delivery">FAQ (Допомога)</a></li>
+            <li><a href="index.html#contacts">Контакти</a></li>
+        </ul>
+
+        <button id="cart-toggle" class="cart-icon-btn" aria-label="Кошик">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span id="cart-count" class="cart-count" hidden>0</span>
+        </button>
+
+        <div class="burger" role="button" aria-label="Відкрити мобільне меню" tabindex="0"><span></span></div>
+    </nav>
+</header>
+
+<main>
+    <p class="breadcrumb container">
+        <a href="index.html#hero">Головна</a> →
+        <a href="catalog.html">Каталог</a> →
+        <span class="current" id="breadcrumb-current">...</span>
+    </p>
+
+    <section class="container product-page-section">
+        <div id="product-page-root" aria-live="polite">
+            <p class="loading-msg">Завантаження товару...</p>
+        </div>
+    </section>
+</main>
+
+<footer class="main-footer">
+    <div class="container footer-grid">
+        <div class="footer-col about-col">
+            <a href="index.html#hero" class="logo-wrapper" aria-label="На головну сторінку Silveri Jewelry">
+                <img src="img/logo1.webp" alt="Логотип Silveri Jewelry" class="logo-img" width="50" height="50">
+                <div class="logo-text">
+                    <span class="word-top">Silveri</span>
+                    <div class="horizontal-line"></div>
+                    <span class="word-bottom">jewelry</span>
+                </div>
+            </a>
+            <p class="footer-desc">Інтернет-магазин ювелірних виробів. Вишуканість, доступна кожному.</p>
+            <div class="footer-socials">
+                <a href="viber://chat?number=%2B380680243337" target="_blank" rel="noopener noreferrer" aria-label="Написати в Viber">
+                    <i class="fa-brands fa-viber"></i>
+                </a>
+                <a href="https://t.me/solomia_ka" target="_blank" rel="noopener noreferrer" aria-label="Написати в Telegram">
+                    <i class="fa-brands fa-telegram"></i>
+                </a>
+            </div>
+        </div>
+
+        <nav class="footer-col" aria-label="Меню про нас">
+            <h4>Про нас</h4>
+            <ul>
+                <li><a href="faq.html#about">Наша історія</a></li>
+                <li><a href="index.html#contacts">Контакти</a></li>
+            </ul>
+        </nav>
+
+        <nav class="footer-col" aria-label="Меню допомоги">
+            <h4>Допомога</h4>
+            <ul>
+                <li><a href="faq.html#delivery">Доставка та оплата</a></li>
+                <li><a href="faq.html#delivery">FAQ</a></li>
+            </ul>
+        </nav>
+
+        <nav class="footer-col" aria-label="Меню каталогу">
+            <h4>Каталог</h4>
+            <ul>
+                <li><a href="catalog.html">Всі прикраси</a></li>
+            </ul>
+        </nav>
+
+        <nav class="footer-col" aria-label="Правова інформація">
+            <h4>Документи</h4>
+            <ul>
+                <li><a href="privacy.html">Умови конфіденційності</a></li>
+                <li><a href="terms.html">Угода користувача</a></li>
+            </ul>
+        </nav>
+
+        <address class="footer-col contacts-col" id="contacts">
+            <h4>Зв'язок</h4>
+            <a class="footer-phone" href="viber://chat?number=%2B380680243337">viber: +38(068) 024 3337</a>
+            <p class="work-hours">Пн-НД: 10:00-22:00</p>
+        </address>
+    </div>
+
+    <div class="footer-bottom">
+        <div class="container bottom-flex">
+            <p class="copyright">© Silveri Jewelry, 2026. Всі права захищені.</p>
+        </div>
+    </div>
+</footer>
+
+<div id="order-modal" class="modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-content">
+        <button class="close-modal" aria-label="Закрити вікно" onclick="closeOrderModal()">&times;</button>
+        <h3 id="modal-title">Оформлення замовлення</h3>
+        <p id="modal-product-info" class="modal-product-name"></p>
+        <p class="modal-prompt">Оберіть зручний для вас спосіб зв'язку:</p>
+
+        <div class="modal-buttons">
+            <a id="btn-tg" target="_blank" rel="noopener noreferrer" class="modal-btn btn-tg">Telegram</a>
+            <a id="btn-vb" target="_blank" rel="noopener noreferrer" class="modal-btn btn-vb">Viber</a>
+        </div>
+    </div>
+</div>
+
+<div id="cart-overlay" class="cart-overlay" aria-hidden="true"></div>
+<div id="cart-panel" class="cart-panel" aria-hidden="true">
+    <div class="cart-panel-inner">
+        <div class="cart-panel-header">
+            <h3>Кошик</h3>
+            <button id="cart-close" class="close-modal" aria-label="Закрити кошик">&times;</button>
+        </div>
+        <div id="cart-items" class="cart-items">
+            <p class="cart-empty-msg">Кошик порожній</p>
+        </div>
+        <div class="cart-panel-footer">
+            <div class="cart-total">Разом: <span id="cart-total">0</span> грн</div>
+            <button id="cart-checkout" class="btn-main" disabled>Оформити замовлення</button>
+        </div>
+    </div>
+</div>
+
+<button id="back-to-top" class="back-to-top" aria-label="Повернутися на початок">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 15l-6-6-6 6"/>
+    </svg>
+</button>
+
+<script type="module" src="script.js"></script>
+<script type="module" src="cart.js"></script>
+
+</body>
+</html>

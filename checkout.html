@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оформлення замовлення | Silveri Jewelry</title>
+    <meta name="robots" content="noindex, follow">
+    <link rel="icon" type="image/x-icon" href="img/logo.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="analytics.js"></script>
+</head>
+<body>
+
+<header>
+    <nav class="container">
+        <a href="index.html#hero" class="logo-wrapper" aria-label="На головну сторінку Silveri Jewelry">
+            <img src="img/logo1.webp" alt="Логотип Silveri Jewelry" class="logo-img" width="50" height="50" fetchpriority="high">
+            <div class="logo-text">
+                <span class="word-top">Silveri</span>
+                <div class="horizontal-line"></div>
+                <span class="word-bottom">jewelry</span>
+            </div>
+        </a>
+
+        <ul class="nav-links">
+            <li><a href="index.html#hero">Головна</a></li>
+            <li><a href="catalog.html">Каталог</a></li>
+            <li><a href="faq.html#about">Про нас</a></li>
+            <li><a href="index.html#contacts">Контакти</a></li>
+        </ul>
+
+        <button id="cart-toggle" class="cart-icon-btn" aria-label="Кошик">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span id="cart-count" class="cart-count" hidden>0</span>
+        </button>
+
+        <div class="burger" role="button" aria-label="Відкрити мобільне меню" tabindex="0"><span></span></div>
+    </nav>
+</header>
+
+<main>
+    <p class="breadcrumb container">
+        <a href="index.html#hero">Головна</a> →
+        <a href="catalog.html">Каталог</a> →
+        <span class="current">Оформлення замовлення</span>
+    </p>
+
+    <section class="container checkout-section">
+        <h1 class="section-title" style="margin-top:0;">Оформлення замовлення</h1>
+
+        <div id="checkout-root">
+            <p id="checkout-empty" hidden class="checkout-empty">
+                Ваш кошик порожній. <a href="catalog.html">Перейти в каталог →</a>
+            </p>
+
+            <div id="checkout-form-wrapper" hidden>
+                <form id="checkout-form" class="checkout-form" novalidate>
+                    <div class="checkout-block">
+                        <h3>Контактні дані</h3>
+                        <label for="customerName">Ім'я та прізвище *</label>
+                        <input type="text" id="customerName" name="customerName" required placeholder="Ваше ім'я">
+
+                        <label for="customerPhone">Телефон *</label>
+                        <input type="tel" id="customerPhone" name="customerPhone" required placeholder="+380 XX XXX XX XX">
+                    </div>
+
+                    <div class="checkout-block">
+                        <h3>Доставка — Нова Пошта</h3>
+
+                        <input type="hidden" id="deliveryType" name="deliveryType" value="nova_poshta">
+
+                        <label>Формат отримання</label>
+                        <div class="segmented-control" id="deliveryFormatControl">
+                            <button type="button" class="segmented-btn active" data-value="branch">Відділення</button>
+                            <button type="button" class="segmented-btn" data-value="postomat">Поштомат</button>
+                        </div>
+                        <input type="hidden" id="deliveryFormat" name="deliveryFormat" value="branch">
+
+                        <label for="city">Місто *</label>
+                        <div class="autocomplete-wrapper">
+                            <input type="text" id="city" name="city" required placeholder="Почніть вводити назву міста" autocomplete="off">
+                            <ul id="citySuggestions" class="autocomplete-list" hidden></ul>
+                        </div>
+                        <input type="hidden" id="cityRef" name="cityRef">
+
+                        <label for="warehouse">Відділення / поштомат *</label>
+                        <select id="warehouse" name="warehouse" required disabled>
+                            <option value="">Спершу оберіть місто</option>
+                        </select>
+                        <input type="hidden" id="warehouseRef" name="warehouseRef">
+                    </div>
+
+                    <div class="checkout-block">
+                        <h3>Спосіб оплати</h3>
+                        <label class="payment-option">
+                            <input type="radio" id="pay-fop" name="paymentMethod" value="fop" checked>
+                            <span class="payment-option-body">
+                                <span class="payment-option-title">Повна оплата</span>
+                                <span class="payment-option-desc">Оплата на рахунок ФОП</span>
+                            </span>
+                        </label>
+                        <label class="payment-option">
+                            <input type="radio" id="pay-cod" name="paymentMethod" value="cod">
+                            <span class="payment-option-body">
+                                <span class="payment-option-title">Накладений платіж</span>
+                                <span class="payment-option-desc">Передоплата 200 грн<br>Решта суми — при отриманні</span>
+                            </span>
+                        </label>
+                        <p class="checkout-hint">Онлайн-оплата карткою поки недоступна — ми повідомимо, коли вона з'явиться.</p>
+                    </div>
+
+                    <div class="checkout-block">
+                        <h3>Коментар</h3>
+                        <label for="comment">Коментар до замовлення (необов'язково)</label>
+                        <textarea id="comment" name="comment" rows="3" placeholder="Побажання щодо замовлення"></textarea>
+                    </div>
+
+                    <div class="checkout-block checkout-summary">
+                        <h3>Перевірка замовлення</h3>
+                        <div id="checkout-summary-items"></div>
+                        <div class="checkout-total-row">
+                            <strong>Разом:</strong>
+                            <strong><span id="checkout-total">0</span> грн</strong>
+                        </div>
+                    </div>
+
+                    <p id="checkout-error" class="checkout-error" role="alert"></p>
+
+                    <button type="submit" class="btn-main">Підтвердити замовлення</button>
+                </form>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="main-footer">
+    <div class="container bottom-flex">
+        <p class="copyright">© Silveri Jewelry, 2026. Всі права захищені.</p>
+        <div class="footer-legal-links">
+            <a href="privacy.html">Умови конфіденційності</a>
+            <a href="terms.html">Угода користувача</a>
+        </div>
+    </div>
+</footer>
+
+<div id="order-modal" class="modal-overlay" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-content">
+        <button class="close-modal" aria-label="Закрити вікно" onclick="closeOrderModal()">&times;</button>
+        <h3 id="modal-title">Оформлення замовлення</h3>
+        <p id="modal-product-info" class="modal-product-name"></p>
+        <p class="modal-prompt">Оберіть зручний для вас спосіб зв'язку:</p>
+        <div class="modal-buttons">
+            <a id="btn-tg" target="_blank" rel="noopener noreferrer" class="modal-btn btn-tg">Telegram</a>
+            <a id="btn-vb" target="_blank" rel="noopener noreferrer" class="modal-btn btn-vb">Viber</a>
+        </div>
+    </div>
+</div>
+
+<div id="cart-overlay" class="cart-overlay" aria-hidden="true"></div>
+<div id="cart-panel" class="cart-panel" aria-hidden="true">
+    <div class="cart-panel-inner">
+        <div class="cart-panel-header">
+            <h3>Кошик</h3>
+            <button id="cart-close" class="close-modal" aria-label="Закрити кошик">&times;</button>
+        </div>
+        <div id="cart-items" class="cart-items">
+            <p class="cart-empty-msg">Кошик порожній</p>
+        </div>
+        <div class="cart-panel-footer">
+            <div class="cart-total">Разом: <span id="cart-total">0</span> грн</div>
+            <button id="cart-checkout" class="btn-main" disabled>Оформити замовлення</button>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="script.js"></script>
+<script type="module" src="cart.js"></script>
+
+</body>
+</html>
