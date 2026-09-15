@@ -1,6 +1,18 @@
 // GET /.netlify/functions/postal-cities?q=київ
 // Шукає міста через API Нової пошти, кешуючи результат у Firestore на 30 днів —
 // один і той самий запит від різних клієнтів не буде щоразу йти до Нової пошти.
+import admin from 'firebase-admin';
+
+if (!admin.apps.length) {
+  // Автоматично парсимо весь JSON зі змінної оточення
+  const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+}
+
+const db = admin.firestore();
 const { getCached } = require('./_cache');
 
 const NP_API_URL = 'https://api.novaposhta.ua/v2.0/json/';
