@@ -27,6 +27,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     
     <link rel="preload" href="img/logo1.webp" as="image" type="image/webp">
+    <link rel="preload" href="img/hero.webp" as="image" type="image/webp" media="(min-width: 769px)">
+    <link rel="preload" href="img/hero-mobile.webp" as="image" type="image/webp" media="(max-width: 768px)">
     
     <link rel="stylesheet" href="style.css">
 
@@ -50,6 +52,7 @@
       }
     }
     </script>
+    <script src="analytics.js"></script>
 </head>
 <body>
 
@@ -65,42 +68,124 @@
         </a>
         
         <ul class="nav-links">
-            <li><a href="#about">Головна</a></li>
-            <li><a href="#catalog">Каталог</a></li>
+            <li><a href="#hero">Головна</a></li>
+            <li><a href="catalog.html">Каталог</a></li>
             <li><a href="faq.html#about">Про нас</a></li>
             <li><a href="faq.html#delivery">Доставка та оплата</a></li>
-            <li><a href="faq.html#faq">FAQ (Допомога)</a></li>
-            <li><a href="faq.html#accordion-item">Контакти</a></li>
+            <li><a href="faq.html#delivery">FAQ (Допомога)</a></li>
+            <li><a href="#contacts">Контакти</a></li>
         </ul>
-        
+
+        <button id="cart-toggle" class="cart-icon-btn" aria-label="Кошик">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span id="cart-count" class="cart-count" hidden>0</span>
+        </button>
+
         <div class="burger" role="button" aria-label="Відкрити мобільне меню" tabindex="0"><span></span></div>
     </nav>
 </header>
 
 <main>
-    <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-content">
-            <h1 id="hero-title">Унікальний дизайн вашої досконалості</h1>
-            <p>Вишукані прикраси, що створюють настрій та підкреслюють ваш статус</p>
-            <a href="#catalog" class="btn-main">Дивитися колекцію</a>
+    <section id="hero" class="hero" aria-labelledby="hero-title">
+        <div class="container hero-inner">
+            <div class="hero-photo">
+                <picture>
+                    <source media="(max-width: 768px)" srcset="img/hero-mobile.webp" type="image/webp">
+                    <source srcset="img/hero.webp" type="image/webp">
+                    <img src="img/hero.jpg" alt="Срібні прикраси Silveri Jewelry — каблучка, браслет, сережки та ланцюжок" width="1000" height="1238" fetchpriority="high" decoding="async">
+                </picture>
+            </div>
+            <div class="hero-content">
+                <h1 id="hero-title">Срібні прикраси, які хочеться носити щодня</h1>
+                <p>Срібло 925 проби.</p>
+                <a href="catalog.html" class="btn-main">Обрати прикрасу</a>
+            </div>
         </div>
     </section>
 
-    <section id="catalog" class="container product-section" aria-labelledby="catalog-title">
-        <h2 id="catalog-title" class="section-title">Каталог прикрас</h2>
-        
-        <div class="filters" role="group" aria-label="Фільтри каталогу">
-            <button class="filter-btn active" data-filter="all">Все</button>
-            <button class="filter-btn" data-filter="Каблучки">Каблучки</button>
-            <button class="filter-btn" data-filter="сережки">Сережки</button>
-            <button class="filter-btn" data-filter="Підвіски">Підвіски</button>
-            <button class="filter-btn" data-filter="Набори">Набори</button>
-            <button class="filter-btn" data-filter="Браслети чоловічі">Браслети чоловічі</button>
-            <button class="filter-btn" data-filter="Браслети жіночі">Браслети жіночі</button>
-            <button class="filter-btn" data-filter="Шарм">Шарми</button>
+    <section id="categories" class="container categories-section" aria-labelledby="categories-title">
+        <h2 id="categories-title" class="section-title">Категорії</h2>
+        <div class="category-tiles" role="group" aria-label="Категорії прикрас">
+            <button class="category-tile" data-filter="Каблучки">Каблучки</button>
+            <button class="category-tile" data-filter="Сережки">Сережки</button>
+            <button class="category-tile" data-filter="Підвіски">Підвіски</button>
+            <button class="category-tile" data-filter="Набори">Набори</button>
+            <button class="category-tile" data-filter="Браслети чоловічі">Браслети чоловічі</button>
+            <button class="category-tile" data-filter="Браслети жіночі">Браслети жіночі</button>
+            <button class="category-tile" data-filter="Шарми">Шарми</button>
         </div>
+    </section>
 
-        <div class="product-grid" id="product-grid" aria-live="polite"></div>
+    <section id="popular" class="container popular-section" style="display:none" aria-labelledby="popular-title">
+        <h2 id="popular-title" class="section-title">Популярні товари</h2>
+        <div class="product-grid" id="popular-grid" aria-live="polite"></div>
+        <div style="text-align:center; margin-top: 30px;">
+            <a href="catalog.html" class="btn-main">Дивитися весь каталог</a>
+        </div>
+    </section>
+
+    <section id="advantages" class="container advantages-section" aria-labelledby="advantages-title">
+        <h2 id="advantages-title" class="section-title">Чому обирають Silveri Jewelry</h2>
+        <div class="advantages-grid">
+            <div class="advantage-card">
+                <span class="advantage-icon">🥈</span>
+                <h3>Срібло 925 проби</h3>
+                <p>Кожна прикраса виготовлена зі срібла 925 проби з цирконієм.</p>
+            </div>
+            <div class="advantage-card">
+                <span class="advantage-icon">🚚</span>
+                <h3>Доставка по всій Україні</h3>
+                <p>Новою Поштою — у відділення або кур'єром. Відправка щодня о 18:00.</p>
+            </div>
+            <div class="advantage-card">
+                <span class="advantage-icon">💬</span>
+                <h3>Особистий контакт</h3>
+                <p>Завжди на зв'язку в Telegram і Viber — відповімо на будь-яке питання про прикрасу.</p>
+            </div>
+            <div class="advantage-card">
+                <span class="advantage-icon">❤️</span>
+                <h3>Нам довіряють 2000+ клієнтів</h3>
+                <p>Прикраси Silveri Jewelry вже обрали тисячі задоволених клієнтів.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="reviews" class="container reviews-section" aria-labelledby="reviews-title">
+        <h2 id="reviews-title" class="section-title">Відгуки клієнтів</h2>
+        <div class="reviews-grid" id="reviews-grid" aria-live="polite"></div>
+    </section>
+
+    <section id="delivery-brief" class="container delivery-brief-section" aria-labelledby="delivery-brief-title">
+        <h2 id="delivery-brief-title" class="section-title">Доставка, оплата, повернення</h2>
+        <div class="brief-grid">
+            <div class="brief-card">
+                <h3>Доставка</h3>
+                <p>Новою Поштою або Укрпоштою по всій Україні (відділення або поштомат). Відправка щодня о 18:00.</p>
+            </div>
+            <div class="brief-card">
+                <h3>Оплата</h3>
+                <p>На рахунок ФОП, або накладений платіж (передоплата 200 грн + комісія пошти).</p>
+            </div>
+            <div class="brief-card">
+                <h3>Повернення</h3>
+                <p>Ваша покупка захищена. Ми підтримуємо 14-денний термін повернення кожного товару. Якщо ви не повністю задоволені своєю покупкою, ми повністю повернемо вам кошти.</p>
+            </div>
+        </div>
+        <a href="faq.html#delivery" class="brief-more-link">Детальніше про доставку та оплату →</a>
+    </section>
+
+    <section id="about-brief" class="container about-brief-section" aria-labelledby="about-brief-title">
+        <h2 id="about-brief-title" class="section-title">Про нас</h2>
+        <p class="about-brief-text">Silveri Jewelry почався з простої любові до прикрас і бажання створити місце, де кожнен зможе знайти щось особливе для себе. Спочатку це була невелика справа, яка поступово перетворилася на улюблений магазин для наших клієнтів. </p>
+        <p class="about-brief-text">З часом невеликий асортимент перетворився на великий вибір прикрас: каблучок, сережок, підвісок, браслетів та наборів. </p>
+        <p class="about-brief-text">Сьогодні Silveri — це вже не просто прикраси. Це маленькі деталі, які стають частиною ваших історій, подарунків, побачень, важливих подій і просто красивих буднів.</p>
+    </section>
+
+    <section id="final-cta" class="final-cta-section" aria-labelledby="final-cta-title">
+        <div class="container">
+            <h2 id="final-cta-title">Готові обрати свою прикрасу?</h2>
+            <a href="catalog.html" class="btn-main">Переглянути каталог</a>
+        </div>
     </section>
 </main>
 
@@ -130,7 +215,7 @@
             <h4>Про нас</h4>
             <ul>
                 <li><a href="faq.html#about">Наша історія</a></li>
-                <li><a href="faq.html#accordion-item">Контакти</a></li>
+                <li><a href="#contacts">Контакти</a></li>
             </ul>
         </nav>
 
@@ -138,21 +223,29 @@
             <h4>Допомога</h4>
             <ul>
                 <li><a href="faq.html#delivery">Доставка та оплата</a></li>
-                <li><a href="faq.html#faq">FAQ</a></li>
+                <li><a href="faq.html#delivery">FAQ</a></li>
             </ul>
         </nav>
 
         <nav class="footer-col" aria-label="Меню каталогу">
             <h4>Каталог</h4>
             <ul>
-                <li><a href="#catalog">Всі прикраси</a></li>
-                <li><a href="#catalog">Каблучки</a></li>
-                <li><a href="#catalog">Сережки</a></li>
-                <li><a href="#catalog">Підвіски</a></li>
-                <li><a href="#catalog">Набори</a></li>
-                <li><a href="#catalog">Браслети чоловічі</a></li>
-                <li><a href="#catalog">Браслети жіночі</a></li>
-                <li><a href="#catalog">Шарми</a></li>
+                <li><a href="catalog.html">Всі прикраси</a></li>
+                <li><a href="catalog.html?category=%D0%9A%D0%B0%D0%B1%D0%BB%D1%83%D1%87%D0%BA%D0%B8">Каблучки</a></li>
+                <li><a href="catalog.html?category=%D1%81%D0%B5%D1%80%D0%B5%D0%B6%D0%BA%D0%B8">Сережки</a></li>
+                <li><a href="catalog.html?category=%D0%9F%D1%96%D0%B4%D0%B2%D1%96%D1%81%D0%BA%D0%B8">Підвіски</a></li>
+                <li><a href="catalog.html?category=%D0%9D%D0%B0%D0%B1%D0%BE%D1%80%D0%B8">Набори</a></li>
+                <li><a href="catalog.html?category=%D0%91%D1%80%D0%B0%D1%81%D0%BB%D0%B5%D1%82%D0%B8%20%D1%87%D0%BE%D0%BB%D0%BE%D0%B2%D1%96%D1%87%D1%96">Браслети чоловічі</a></li>
+                <li><a href="catalog.html?category=%D0%91%D1%80%D0%B0%D1%81%D0%BB%D0%B5%D1%82%D0%B8%20%D0%B6%D1%96%D0%BD%D0%BE%D1%87%D1%96">Браслети жіночі</a></li>
+                <li><a href="catalog.html?category=%D0%A8%D0%B0%D1%80%D0%BC%D0%B8">Шарми</a></li>
+            </ul>
+        </nav>
+
+        <nav class="footer-col" aria-label="Правова інформація">
+            <h4>Документи</h4>
+            <ul>
+                <li><a href="privacy.html">Умови конфіденційності</a></li>
+                <li><a href="terms.html">Угода користувача</a></li>
             </ul>
         </nav>
 
@@ -183,12 +276,31 @@
         </div>
     </div>
 </div>
+<div id="cart-overlay" class="cart-overlay" aria-hidden="true"></div>
+<div id="cart-panel" class="cart-panel" aria-hidden="true">
+    <div class="cart-panel-inner">
+        <div class="cart-panel-header">
+            <h3>Кошик</h3>
+            <button id="cart-close" class="close-modal" aria-label="Закрити кошик">&times;</button>
+        </div>
+        <div id="cart-items" class="cart-items">
+            <p class="cart-empty-msg">Кошик порожній</p>
+        </div>
+        <div class="cart-panel-footer">
+            <div class="cart-total">Разом: <span id="cart-total">0</span> грн</div>
+            <button id="cart-checkout" class="btn-main" disabled>Оформити замовлення</button>
+        </div>
+    </div>
+</div>
+
 <button id="back-to-top" class="back-to-top" aria-label="Повернутися на початок">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M18 15l-6-6-6 6"/>
     </svg>
-<script type="module" src="script.js"></script>
-
 </button>
+
+<script type="module" src="script.js"></script>
+<script type="module" src="cart.js"></script>
+
 </body>
 </html>
