@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app-check.js";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app-check.js";
 import { getFirestore, collection, addDoc, deleteDoc, doc, getDoc, onSnapshot, query, orderBy, where, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -20,7 +20,7 @@ const app = initializeApp(firebaseConfig);
 // сайту, а не зі скрипта/бота. reCAPTCHA v3 — невидима для відвідувача,
 // нічого показувати чи клікати не треба.
 initializeAppCheck(app, {
-    provider: new ReCaptchaV3Provider('6Lc7m7wtAAAAALbkOTY1oe28WmkfIgMxdZJ-yyqz'),
+    provider: new ReCaptchaEnterpriseProvider('6Lc7m7wtAAAAALbkOTY1oe28WmkflgMxdZJ-yyqz'),
     isTokenAutoRefreshEnabled: true
 });
 
