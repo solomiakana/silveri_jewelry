@@ -2,16 +2,27 @@
 // Приймає від клієнта ТІЛЬКИ id товару + кількість (без ціни!) та дані
 // покупця/доставки. Ціну, назву й фото бере з Firestore (джерело правди),
 // тож підмінити суму замовлення через DevTools більше не можна.
+const crypto = require('crypto');
 const { getDb } = require('./_firebaseAdmin');
 const admin = require('firebase-admin');
+const { sendPurchase } = require('./_metaCapi');
 
 const MAX_ITEMS = 30;
 const MAX_QTY_PER_ITEM = 20;
 const MAX_TEXT_LEN = 300;
 
+// Випадковий ID виду "SIL-K7M2QX". Алфавіт без схожих символів (0/O, 1/I/L).
+// Раніше це були останні 6 цифр Date.now(), які повторюються кожні ~16 хв —
+// колізія тихо перезаписувала б чуже замовлення й "з'їдала" purchase у GA4.
+const ORDER_ID_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 function generateOrderId() {
-    return 'SIL-' + Date.now().toString().slice(-6);
+    const bytes = crypto.randomBytes(6);
+    let id = '';
+    for (let i = 0; i < 6; i++) id += ORDER_ID_ALPHABET[bytes[i] % ORDER_ID_ALPHABET.length];
+    return 'SIL-' + id;
 }
+
+const isAlreadyExists = (e) => e && (e.code === 6 || e.code === 'already-exists' || /ALREADY_EXISTS/.test(String(e.message)));
 
 function cleanText(value, maxLen = MAX_TEXT_LEN) {
     return typeof value === 'string' ? value.trim().slice(0, maxLen) : '';
@@ -33,6 +44,7 @@ exports.handler = async (event) => {
     const customer = payload.customer || {};
     const delivery = payload.delivery || {};
     const attribution = payload.attribution || {};
+    const clientTracking = payload.tracking || {};
 
     // --- Базова валідація ---
     if (rawItems.length === 0) {
@@ -66,6 +78,22 @@ exports.handler = async (event) => {
     };
     // Прибираємо порожні поля, щоб не засмічувати документ
     Object.keys(utm).forEach(k => { if (!utm[k]) delete utm[k]; });
+
+    // Контекст для аналітики (Meta CAPI). IP не зберігаємо — він потрібен лише для відправки в Meta.
+    const headers = event.headers || {};
+    const clientIp = headers['x-nf-client-connection-ip'] ||
+        String(headers['x-forwarded-for'] || '').split(',')[0].trim() || '';
+    const userAgent = cleanText(headers['user-agent'], 300) || cleanText(clientTracking.clientUserAgent, 300);
+    const tracking = {
+        fbp: cleanText(clientTracking.fbp, 150),
+        fbc: cleanText(clientTracking.fbc, 250),
+        consent: ['granted', 'denied'].includes(clientTracking.consent) ? clientTracking.consent : 'unset',
+        eventSourceUrl: /^https?:\/\//.test(clientTracking.eventSourceUrl || '') ? cleanText(clientTracking.eventSourceUrl, 300) : '',
+        gaClientId: cleanText(clientTracking.gaClientId, 100),
+        gaSessionId: cleanText(clientTracking.gaSessionId, 100),
+        clientUserAgent: userAgent,
+    };
+    Object.keys(tracking).forEach(k => { if (!tracking[k]) delete tracking[k]; });
 
     if (!name || !phone || !city || !cityRef || !warehouse) {
         return { statusCode: 400, body: JSON.stringify({ error: 'Заповніть усі обов’язкові поля.' }) };
@@ -134,10 +162,8 @@ exports.handler = async (event) => {
         }
 
         const total = items.reduce((sum, item) => sum + item.price * item.qty, 0);
-        const orderID = generateOrderId();
 
-        await db.collection('orders').doc(orderID).set({
-            orderID,
+        const orderData = {
             items,
             total,
             customerName: name,
@@ -153,8 +179,39 @@ exports.handler = async (event) => {
             orderStatus: 'new',
             comment,
             utm,
+            tracking,
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        // create() (а не set()) — не дозволяє перезаписати існуюче замовлення; при колізії ID беремо новий
+        let orderID = null;
+        let orderRef = null;
+        for (let attempt = 0; attempt < 5 && !orderRef; attempt++) {
+            const candidate = generateOrderId();
+            const ref = db.collection('orders').doc(candidate);
+            try {
+                await ref.create({ orderID: candidate, ...orderData });
+                orderID = candidate;
+                orderRef = ref;
+            } catch (e) {
+                if (!isAlreadyExists(e)) throw e;
+            }
+        }
+        if (!orderRef) throw new Error('Не вдалося згенерувати унікальний ID замовлення');
+
+        // Серверна подія Purchase у Meta (дедуплікація з пікселем за event_id = orderID).
+        // Ніколи не ламає замовлення: sendPurchase не кидає винятків, а запис результату — best effort.
+        const capi = await sendPurchase({
+            orderID, items, total,
+            customer: { name, phone },
+            tracking, ip: clientIp, userAgent,
         });
+        try {
+            await orderRef.update({ 'tracking.capi': { ...capi, sentAt: admin.firestore.Timestamp.now() } });
+        } catch (e) {
+            console.error('create-order: не вдалося записати статус CAPI:', e.message);
+        }
+
 
         return {
             statusCode: 200,
