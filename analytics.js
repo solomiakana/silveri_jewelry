@@ -7,8 +7,7 @@
 
 // ⚠️ ВСТАВ СВОЇ ID СЮДИ ПЕРЕД ДЕПЛОЄМ:
 const GA4_MEASUREMENT_ID = 'G-XXXXXXXXXX';   // GA4 → Admin → Data Streams → Measurement ID
-const META_PIXEL_ID = '_PIXEL_ID';           // Meta Events Manager → Pixel ID (1064635219902420)
-
+const META_PIXEL_ID = '1064635219902420';           
 // 'opt-out' — трекери працюють, доки відвідувач не натиснув «Відхилити»
 // 'opt-in'  — трекери вантажаться тільки після «Прийняти» (для аудиторії ЄС)
 const CONSENT_MODE = 'opt-out';
