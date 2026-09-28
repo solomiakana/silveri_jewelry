@@ -6,6 +6,15 @@
 
 const CART_KEY = 'silveri_cart';
 
+// Аналітика: усі виклики ізольовані — помилка в трекінгу не має ламати кошик чи оформлення
+function track(fn) {
+    try {
+        if (window.SilveriAnalytics) fn(window.SilveriAnalytics);
+    } catch (e) {
+        console.warn('Аналітика:', e);
+    }
+}
+
 const escapeHTML = (str) => typeof str === 'string'
     ? str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[tag])
     : str;
@@ -35,15 +44,20 @@ function addToCart(item, qty = 1) {
     const existing = cart.find(p => p.id === item.id);
     if (existing) {
         existing.qty += qty;
+        if (!existing.category && item.category) existing.category = item.category;
     } else {
-        cart.push({ id: item.id, title: item.title, price: item.price, image: item.image, qty });
+        cart.push({ id: item.id, title: item.title, price: item.price, image: item.image, category: item.category || '', qty });
     }
     saveCart(cart);
-    openCartPanel(); // одразу показуємо кошик, щоб було видно, що товар додався
+    track(a => a.addToCart({ id: item.id, title: item.title, price: item.price, category: item.category || (existing && existing.category) || '' }, qty));
+    openCartPanel(false); // одразу показуємо кошик, щоб було видно, що товар додався (view_cart тут не шлемо)
 }
 
 function removeFromCart(id) {
-    saveCart(getCart().filter(p => p.id !== id));
+    const cart = getCart();
+    const removed = cart.find(p => p.id === id);
+    saveCart(cart.filter(p => p.id !== id));
+    if (removed) track(a => a.removeFromCart(removed, removed.qty));
 }
 
 function setQty(id, qty) {
@@ -54,8 +68,12 @@ function setQty(id, qty) {
         removeFromCart(id);
         return;
     }
+    const delta = qty - item.qty;
     item.qty = qty;
     saveCart(cart);
+    // Зміна кількості кнопками +/− у панелі — це теж додавання/видалення (у GA4 — на різницю)
+    if (delta > 0) track(a => a.addToCart(item, delta));
+    else if (delta < 0) track(a => a.removeFromCart(item, -delta));
 }
 
 function getTotal(cart) {
@@ -108,7 +126,8 @@ function renderCartPanel() {
     if (checkoutBtn) checkoutBtn.disabled = false;
 }
 
-function openCartPanel() {
+function openCartPanel(shouldTrack = false) {
+    if (shouldTrack === true) track(a => a.viewCart(getCart()));
     document.getElementById('cart-panel')?.setAttribute('aria-hidden', 'false');
     document.getElementById('cart-overlay')?.setAttribute('aria-hidden', 'false');
     document.getElementById('cart-panel')?.classList.add('open');
@@ -230,11 +249,7 @@ function goToCheckout() {
     window.location.href = 'checkout.html';
 }
 
-// Людський, короткий ID замовлення на кшталт "SIL-482913" — використовується як
-// сам ID документа в Firestore, тому стає центральним ідентифікатором усюди в адмінці.
-function generateOrderId() {
-    return 'SIL-' + Date.now().toString().slice(-6);
-}
+// ID замовлення генерує сервер (netlify/functions/create-order.js) — унікальний і випадковий.
 
 // Сегментовані перемикачі "Формат отримання" на checkout.html
 function initSegmentedControls() {
@@ -277,6 +292,8 @@ function renderCheckoutSummary() {
     if (emptyState) emptyState.hidden = true;
     if (formState) formState.hidden = false;
 
+    track(a => a.beginCheckout(cart));
+
     summaryEl.innerHTML = cart.map(item => `
         <div class="checkout-summary-line">
             <img src="${escapeHTML(item.image) || 'img/placeholder.jpg'}" alt="${escapeHTML(item.title)}" loading="lazy">
@@ -315,11 +332,26 @@ async function submitOrder(event) {
 
     if (!name || !phone || !city || !cityRef || !warehouse) {
         if (errorEl) errorEl.textContent = 'Будь ласка, заповніть усі обов’язкові поля — місто й відділення оберіть зі списку підказок.';
+        track(a => a.checkoutError('validation'));
         return;
     }
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Оформлюємо...';
+
+    // Форма валідна — це кроки воронки «доставка» і «оплата»
+    track(a => {
+        a.addShipping(cart, { deliveryType, deliveryFormat });
+        a.addPayment(cart, { paymentMethod });
+    });
+
+    // Контекст для серверної події Meta (fbp/fbc, GA client_id, згода). Ніколи не блокує замовлення.
+    let tracking = null;
+    try {
+        if (window.SilveriAnalytics) tracking = await window.SilveriAnalytics.getTrackingContext();
+    } catch (e) {
+        console.warn('Аналітика: не вдалося зібрати контекст', e);
+    }
 
     try {
         const response = await fetch('/.netlify/functions/create-order', {
@@ -330,6 +362,7 @@ async function submitOrder(event) {
                 customer: { name, phone },
                 delivery: { deliveryType, deliveryFormat, city, cityRef, warehouse, warehouseRef, paymentMethod, comment },
                 attribution: window.getStoredUTM ? window.getStoredUTM() : null,
+                tracking,
             }),
         });
 
@@ -337,8 +370,10 @@ async function submitOrder(event) {
 
         if (!response.ok) {
             if (response.status === 409 && Array.isArray(result.unavailable)) {
+                track(a => a.checkoutError('unavailable'));
                 if (errorEl) errorEl.textContent = 'На жаль, деякі товари вже розкупили. Оновіть кошик і спробуйте ще раз.';
             } else {
+                track(a => a.checkoutError(response.status === 429 ? 'rate_limited' : 'server_error'));
                 if (errorEl) errorEl.textContent = result.error || 'Щось пішло не так. Спробуйте ще раз або напишіть нам напряму в Telegram/Viber.';
             }
             submitBtn.disabled = false;
@@ -347,12 +382,22 @@ async function submitOrder(event) {
         }
 
         // result.items/result.total — актуальні дані з сервера (а не з локального кошика)
-        if (window.trackPurchase) window.trackPurchase(result.orderID, result.items, result.total);
+        // Аналітика в окремому try/catch: замовлення вже створене, тому збій трекінгу
+        // не має показувати помилку і провокувати повторне оформлення (дубль замовлення).
+        track(a => {
+            const categoryById = new Map(cart.map(c => [c.id, c.category || '']));
+            a.purchase({
+                orderID: result.orderID,
+                total: result.total,
+                items: result.items.map(i => ({ ...i, category: categoryById.get(i.id) || '' })),
+            });
+        });
         showCheckoutSuccess(result.orderID, result.items, result.total, { name, phone, city, warehouse, deliveryType, deliveryFormat, paymentMethod, comment });
         localStorage.removeItem(CART_KEY);
         renderCartPanel();
     } catch (e) {
         console.error('Не вдалося оформити замовлення:', e);
+        track(a => a.checkoutError('network_error'));
         if (errorEl) errorEl.textContent = 'Щось пішло не так. Спробуйте ще раз або напишіть нам напряму в Telegram/Viber.';
         submitBtn.disabled = false;
         submitBtn.textContent = 'Підтвердити замовлення';
@@ -409,7 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initCityAutocomplete();
     document.getElementById('checkout-form')?.addEventListener('submit', submitOrder);
 
-    document.getElementById('cart-toggle')?.addEventListener('click', openCartPanel);
+    document.getElementById('cart-toggle')?.addEventListener('click', () => openCartPanel(true));
     document.getElementById('cart-close')?.addEventListener('click', closeCartPanel);
     document.getElementById('cart-overlay')?.addEventListener('click', closeCartPanel);
     document.getElementById('cart-checkout')?.addEventListener('click', goToCheckout);
