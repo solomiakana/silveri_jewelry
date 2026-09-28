@@ -40,6 +40,16 @@ const escapeHTML = (str) => typeof str === 'string'
     ? str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[tag]) 
     : str;
 
+// Аналітика: виклик ізольований — помилка трекінгу не може зламати відмальовку сторінки.
+// На сторінках без analytics.js (admin.html) window.SilveriAnalytics відсутній — нічого не відбувається.
+const track = (fn) => {
+    try {
+        if (window.SilveriAnalytics) fn(window.SilveriAnalytics);
+    } catch (e) {
+        console.warn('Аналітика:', e);
+    }
+};
+
 // --- 1. КЛІЄНТСЬКА ЧАСТИНА (ГОЛОВНА) ---
 const PAGE_SIZE = 12; // товарів на сторінці каталогу
 let allProducts = [];  // повний список товарів з бази (оновлюється в реальному часі)
@@ -99,7 +109,7 @@ function buildProductCard(product) {
         </a>
         <p class="product-desc">${safeDesc}</p>
         <p class="price">${price} грн</p>
-        <button class="cart-btn" data-id="${safeId}" data-title="${safeTitle}" data-price="${price}" data-image="${safeImage}" ${outOfStock ? 'disabled' : ''}>
+        <button class="cart-btn" data-id="${safeId}" data-title="${safeTitle}" data-price="${price}" data-image="${safeImage}" data-category="${escapeHTML(category || '')}" ${outOfStock ? 'disabled' : ''}>
             ${outOfStock ? 'Немає в наявності' : 'У кошик'}
         </button>
     `;
@@ -140,6 +150,8 @@ function renderCatalog() {
     grid.appendChild(fragment);
 
     renderPagination(filtered.length);
+
+    track(a => a.viewItemList('catalog', currentFilter === 'all' ? 'Каталог' : `Каталог: ${currentFilter}`, pageItems));
 }
 
 // Малює кнопки-номери сторінок під каталогом
@@ -224,6 +236,8 @@ function renderFeatured() {
     featured.forEach(product => fragment.appendChild(buildProductCard(product)));
     grid.innerHTML = '';
     grid.appendChild(fragment);
+
+    track(a => a.viewItemList('popular', 'Популярні', featured));
 }
 
 // --- Сторінка окремого товару (product.html?id=АРТИКУЛ) ---
@@ -257,6 +271,7 @@ async function initProductPage() {
 }
 
 function renderProductNotFound(root) {
+    track(a => a.pageView({ title: 'Товар не знайдено | Silveri Jewelry' }));
     root.innerHTML = `
         <div class="product-not-found">
             <h1>Товар не знайдено</h1>
@@ -322,7 +337,7 @@ function renderProductDetail(root, product) {
                 <p class="product-page-desc">${safeDesc || 'Опис уточнюється.'}</p>
 
                 <div class="product-page-actions">
-                    <button class="cart-btn" data-id="${safeId}" data-title="${safeTitle}" data-price="${price}" data-image="${safeImage}" ${outOfStock ? 'disabled' : ''}>
+                    <button class="cart-btn" data-id="${safeId}" data-title="${safeTitle}" data-price="${price}" data-image="${safeImage}" data-category="${safeCategory}" ${outOfStock ? 'disabled' : ''}>
                         ${outOfStock ? 'Немає в наявності' : 'У кошик'}
                     </button>
                 </div>
@@ -358,6 +373,21 @@ function renderProductDetail(root, product) {
             </div>
         </div>
     `;
+
+    // Canonical: одна адреса на товар (сайт віддає його і як product.html?id=X, і як /product/X)
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+        canonical = document.createElement('link');
+        canonical.rel = 'canonical';
+        document.head.appendChild(canonical);
+    }
+    canonical.href = `https://silveri.com.ua/product.html?id=${encodeURIComponent(id)}`;
+
+    // Аналітика: page_view з правильним заголовком (він щойно виставлений вище) + view_item
+    track(a => {
+        a.pageView({ title: document.title });
+        a.viewItem({ id, title, price, category });
+    });
 }
 
 // "Схожі товари" — до 4 товарів з тієї ж категорії, окрім поточного
@@ -381,6 +411,7 @@ async function loadRelatedProducts(product) {
         related.forEach(p => fragment.appendChild(buildProductCard(p)));
         grid.appendChild(fragment);
         block.hidden = false;
+        track(a => a.viewItemList('related', 'Схожі товари', related));
     } catch (e) {
         console.error("Помилка завантаження схожих товарів:", e);
     }
@@ -1125,7 +1156,8 @@ document.addEventListener('click', (e) => {
             id: btn.dataset.id,
             title: btn.dataset.title,
             price: Number(btn.dataset.price),
-            image: btn.dataset.image
+            image: btn.dataset.image,
+            category: btn.dataset.category || ''
         });
         // Коротка візуальна відповідь, що товар додано
         const originalText = btn.textContent;
@@ -1285,9 +1317,17 @@ if (backToTop) {
 }
 
 // --- Cookie Consent Banner ---
+// Згода зберігається через SilveriAnalytics.setConsent (analytics.js): «Прийняти» / «Відхилити».
+// Якщо analytics.js на сторінці немає (admin.html) — працює як раніше, з однією кнопкою.
 (function initCookieBanner() {
-    const STORAGE_KEY = 'silveri_cookie_consent';
-    if (localStorage.getItem(STORAGE_KEY) === 'accepted') return;
+    const LEGACY_KEY = 'silveri_cookie_consent';
+    const A = window.SilveriAnalytics;
+
+    if (A) {
+        if (A.getConsent() !== 'unset') return; // рішення вже прийнято
+    } else if (localStorage.getItem(LEGACY_KEY) === 'accepted') {
+        return;
+    }
 
     const banner = document.createElement('div');
     banner.className = 'cookie-banner';
@@ -1300,14 +1340,20 @@ if (backToTop) {
             Ми використовуємо файли cookie. Вони потрібні для коректної роботи сайту та покращення вашого досвіду.
             <a href="privacy.html">Політика конфіденційності</a>
         </p>
-        <button type="button" class="cookie-banner__btn">Прийняти</button>
+        <div class="cookie-banner__actions">
+            ${A ? '<button type="button" class="cookie-banner__btn cookie-banner__btn--secondary" data-consent="denied">Відхилити</button>' : ''}
+            <button type="button" class="cookie-banner__btn" data-consent="granted">Прийняти</button>
+        </div>
     `;
     document.body.appendChild(banner);
 
     requestAnimationFrame(() => banner.classList.add('show'));
 
-    banner.querySelector('.cookie-banner__btn').addEventListener('click', () => {
-        localStorage.setItem(STORAGE_KEY, 'accepted');
+    banner.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-consent]');
+        if (!btn) return;
+        if (A) A.setConsent(btn.dataset.consent);
+        else localStorage.setItem(LEGACY_KEY, 'accepted');
         banner.classList.remove('show');
         setTimeout(() => banner.remove(), 400);
     });
