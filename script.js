@@ -1232,6 +1232,11 @@ document.addEventListener('DOMContentLoaded', () => {
         burger.classList.toggle('active');
         nav.classList.toggle('active');
     });
+    // Після переходу по пункту меню закриваємо його (інакше на якорях тієї ж сторінки меню лишається поверх контенту)
+    nav?.querySelectorAll('a').forEach(link => link.addEventListener('click', () => {
+        burger?.classList.remove('active');
+        nav.classList.remove('active');
+    }));
     const searchInput = document.getElementById('searchArticul');
     const categorySelect = document.getElementById('filterCategory');
 
