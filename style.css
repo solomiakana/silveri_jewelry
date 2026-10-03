@@ -97,6 +97,7 @@ nav {
     font-size: 0.7rem; font-weight: 700; border-radius: 50%; min-width: 18px; height: 18px;
     display: flex; align-items: center; justify-content: center; padding: 0 2px;
 }
+.cart-count[hidden] { display: none; }
 
 /* --- Панель кошика (висувна) --- */
 .cart-overlay {
@@ -106,11 +107,11 @@ nav {
 .cart-overlay.open { opacity: 1; visibility: visible; }
 
 .cart-panel {
-    position: fixed; top: 0; right: -420px; width: 100%; max-width: 400px; height: 100vh;
-    background: var(--white); z-index: 1999; box-shadow: -10px 0 30px rgba(0,0,0,0.15);
-    transition: right 0.35s ease; display: flex; flex-direction: column;
+    position: fixed; top: 0; right: -420px; width: 100%; max-width: 400px; height: 100vh; height: 100dvh;
+    background: var(--white); z-index: 1999; box-shadow: none;
+    transition: right 0.35s ease, box-shadow 0.35s ease; display: flex; flex-direction: column;
 }
-.cart-panel.open { right: 0; }
+.cart-panel.open { right: 0; box-shadow: -10px 0 30px rgba(0,0,0,0.15); }
 .cart-panel-inner { display: flex; flex-direction: column; height: 100%; padding: 25px; }
 .cart-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .cart-panel-header h3 { color: var(--deep-berry); }
@@ -747,10 +748,13 @@ nav {
     .burger.active::after { transform: rotate(-45deg); bottom: 9px; }
 
     .nav-links {
-        position: fixed; top: 0; right: -100%; width: 100%; height: 100vh;
-        background: var(--white); flex-direction: column; justify-content: center;
+        position: fixed; top: 0; right: -100%; width: 100%; height: 100vh; height: 100dvh;
+        background: var(--white); flex-direction: column; justify-content: flex-start;
         align-items: center; transition: 0.4s; z-index: 1000;
+        overflow-y: auto; padding: 90px 0 30px;
     }
+    .nav-links li:first-child { margin-top: auto; }
+    .nav-links li:last-child { margin-bottom: auto; }
 
     .nav-links.active { right: 0; }
     .nav-links li { margin: 15px 0; }
@@ -810,4 +814,75 @@ nav {
     .cookie-banner { flex-direction: column; align-items: flex-start; text-align: left; padding: 18px 20px; }
     .cookie-banner__actions { width: 100%; flex-direction: column-reverse; }
     .cookie-banner__btn { width: 100%; text-align: center; }
+}
+
+/* ======================================
+   7. МОБІЛЬНА АДАПТАЦІЯ (виправлення відображення на телефонах)
+   ====================================== */
+
+/* Хлібні крихти й блок товару: власний padding перебивав бокові відступи .container,
+   тому на вузьких екранах контент впирався в край екрана */
+@media (max-width: 1200px) {
+    .breadcrumb.container,
+    .product-page-section.container { padding-left: 25px; padding-right: 25px; }
+}
+
+@media (max-width: 768px) {
+    /* Заголовки секцій */
+    .section-title { font-size: 1.8rem; margin: 50px 0 30px; }
+    .final-cta-section { padding: 50px 0; }
+    .final-cta-section h2 { font-size: 1.7rem; margin-bottom: 25px; }
+    .about-brief-text { font-size: 1rem; line-height: 1.6; }
+    .main-footer { margin-top: 60px; padding-top: 40px; }
+
+    /* Сторінка товару */
+    .breadcrumb { font-size: 0.85rem; line-height: 1.6; }
+    .product-page-photo img { height: auto; aspect-ratio: 1 / 1; }
+    .product-page-info h1 { font-size: 1.7rem; }
+    .product-page-price { font-size: 1.7rem; }
+    .product-page-section-block { padding: 30px 0; }
+    .not-found-section { margin: 40px 0; padding: 30px 20px; }
+}
+
+@media (max-width: 640px) {
+    /* Картки у 2 колонки (Популярні / Схожі): менше відступів, щоб вміщалось фото і текст */
+    #popular-grid .product-card,
+    #related-grid .product-card { padding: 12px; border-radius: 14px; }
+    #popular-grid .product-img,
+    #related-grid .product-img { margin-bottom: 10px; }
+    #popular-grid .product-id,
+    #related-grid .product-id { font-size: 0.75rem; margin-bottom: 6px; }
+    #popular-grid .product-card h3,
+    #related-grid .product-card h3 { font-size: 0.95rem; line-height: 1.25; overflow-wrap: break-word; }
+    #popular-grid .product-desc,
+    #related-grid .product-desc { margin: 4px 0 8px; }
+    #popular-grid .price,
+    #related-grid .price { font-size: 1.15rem !important; padding-top: 8px; }
+    #popular-grid .cart-btn,
+    #related-grid .cart-btn { margin-top: 10px; padding: 12px 6px; font-size: 0.78rem; }
+    #popular-grid .stock-badge,
+    #related-grid .stock-badge { top: 6px; left: 6px; font-size: 0.65rem; padding: 4px 8px; }
+
+    /* Cookie-банер: компактніший, щоб не закривав пів екрана */
+    .cookie-banner { left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); padding: 14px 16px; gap: 10px; }
+    .cookie-banner__icon { font-size: 1.4rem; }
+    .cookie-banner__text { font-size: 0.8rem; line-height: 1.4; }
+    .cookie-banner__actions { flex-direction: row; }
+    .cookie-banner__btn { flex: 1; width: auto; padding: 11px 10px; font-size: 0.75rem; letter-spacing: 0.5px; }
+}
+
+@media (max-width: 480px) {
+    .btn-main { padding: 14px 30px; letter-spacing: 1px; font-size: 0.9rem; }
+    .category-tiles { gap: 10px; }
+    .category-tile { padding: 14px 20px; font-size: 0.95rem; }
+    .product-page-actions .cart-btn { width: 100%; }
+    .cart-panel-inner { padding: 20px; }
+}
+
+@media (max-width: 380px) {
+    .hero-content h1 { font-size: 1.9rem; }
+    .section-title { font-size: 1.6rem; }
+    .logo-img { height: 40px; }
+    .word-top { font-size: 19px; letter-spacing: 1.5px; }
+    .word-bottom { letter-spacing: 3.8px; }
 }
