@@ -1,0 +1,10 @@
+{
+  "name": "silveri-jewelry-functions",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "firebase-admin": "^12.1.0"
+  }
+}
