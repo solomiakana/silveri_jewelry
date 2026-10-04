@@ -1,8 +1,9 @@
+[build]
+  command = "npm install"
 # Netlify Functions (серверна частина — кешування даних доставки Нової пошти)
 [functions]
   directory = "netlify/functions"
-  node_bundler = "esbuild"
-  external_node_modules = ["firebase-admin"]
+  node_bundler = "nft"
 
 # Чисті URL для сторінки товару: /product/АРТИКУЛ замість /product.html?id=АРТИКУЛ
 [[redirects]]
