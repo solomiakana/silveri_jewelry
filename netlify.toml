@@ -2,6 +2,7 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  external_node_modules = ["firebase-admin"]
 
 # Чисті URL для сторінки товару: /product/АРТИКУЛ замість /product.html?id=АРТИКУЛ
 [[redirects]]
