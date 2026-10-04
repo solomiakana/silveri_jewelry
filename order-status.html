@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Статус оплати замовлення | Silveri Jewelry</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/x-icon" href="img/logo.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script src="analytics.js"></script>
+</head>
+<body>
+
+<header>
+    <nav class="container">
+        <a href="index.html#hero" class="logo-wrapper" aria-label="На головну сторінку Silveri Jewelry">
+            <img src="img/logo1.webp" alt="Логотип Silveri Jewelry" class="logo-img" width="50" height="50" fetchpriority="high">
+            <div class="logo-text">
+                <span class="word-top">Silveri</span>
+                <div class="horizontal-line"></div>
+                <span class="word-bottom">jewelry</span>
+            </div>
+        </a>
+        <div class="checkout-header-help">
+            <span class="checkout-header-help-text">Потрібна допомога?</span>
+            <a class="checkout-header-help-icon" href="viber://chat?number=%2B380680243337" target="_blank" rel="noopener noreferrer" aria-label="Написати в Viber"><i class="fa-brands fa-viber"></i></a>
+            <a class="checkout-header-help-icon" href="https://t.me/solomia_ka" target="_blank" rel="noopener noreferrer" aria-label="Написати в Telegram"><i class="fa-brands fa-telegram"></i></a>
+        </div>
+    </nav>
+</header>
+
+<main>
+    <section class="container checkout-section">
+        <!-- role="status" aria-live: зміна стану оплати озвучується скрінрідером без переміщення фокусу -->
+        <div id="order-status-root" class="order-status-root" role="status" aria-live="polite">
+            <div class="order-status-box order-status-checking">
+                <div class="payment-redirect-spinner" aria-hidden="true"></div>
+                <h1>Перевіряємо оплату…</h1>
+                <p id="order-status-wait-hint">Це зазвичай займає кілька секунд.</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="main-footer">
+    <div class="container bottom-flex">
+        <p class="copyright">© Silveri Jewelry, 2026. Всі права захищені.</p>
+        <div class="footer-legal-links">
+            <a href="privacy.html">Умови конфіденційності</a>
+            <a href="terms.html">Угода користувача</a>
+        </div>
+    </div>
+</footer>
+
+<script type="module" src="order-status.js"></script>
+
+</body>
+</html>
