@@ -452,7 +452,18 @@ window.login = async () => {
         errorP.textContent = "";
     } catch (error) {
         console.error("Помилка авторизації:", error.code);
-        errorP.textContent = "Помилка: невірний логін або пароль.";
+        const messages = {
+            'auth/invalid-credential': 'Невірний email або пароль.',
+            'auth/wrong-password': 'Невірний email або пароль.',
+            'auth/user-not-found': 'Невірний email або пароль.',
+            'auth/invalid-email': 'Некоректний формат email.',
+            'auth/too-many-requests': 'Забагато спроб. Зачекайте кілька хвилин і спробуйте знову.',
+            'auth/network-request-failed': 'Немає з\'єднання з мережею. Перевірте інтернет.',
+            'auth/user-disabled': 'Цей акаунт вимкнено.',
+            'auth/firebase-app-check-token-is-invalid': 'Не пройдено перевірку безпеки (App Check). Відкрийте сторінку в звичайному браузері.',
+            'auth/multi-factor-auth-required': 'Потрібен другий фактор автентифікації.'
+        };
+        errorP.textContent = (messages[error.code] || 'Помилка входу.') + ' [' + (error.code || 'unknown') + ']';
     }
 };
 
