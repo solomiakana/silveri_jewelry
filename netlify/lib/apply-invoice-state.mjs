@@ -76,6 +76,21 @@ export async function applyInvoiceState({ db, event, source, eventId = null, raw
         const plan = planInvoiceEvent({ order, payment, event, now });
         outcome = { result: plan.result, reason: plan.reason };
 
+        // Firestore вимагає, щоб усі читання транзакції відбулися до будь-яких записів.
+        // Записи про повернення (refunds/{extRef}) потребують читання існуючого документа
+        // (щоб не перезаписати requestedAt/source при повторній події) — робимо це зараз,
+        // а не в циклі записів нижче, інакше транзакція кидає
+        // "Firestore transactions require all reads to be executed before all writes."
+        const refundLookups = new Map();
+        if (plan.result === 'applied' && order && orderRef && plan.refundItems?.length) {
+            for (const item of plan.refundItems) {
+                if (!item.extRef) continue;
+                const refundRef = db.collection('refunds').doc(item.extRef);
+                const refundSnap = await tx.get(refundRef);
+                refundLookups.set(item.extRef, { refundRef, refundSnap });
+            }
+        }
+
         if (eventRef) {
             tx.set(eventRef, {
                 receivedAt: now,
@@ -124,8 +139,7 @@ export async function applyInvoiceState({ db, event, source, eventId = null, raw
 
             for (const item of plan.refundItems) {
                 if (!item.extRef) continue; // зовнішні повернення без extRef не мають окремого запиту на повернення
-                const refundRef = db.collection('refunds').doc(item.extRef);
-                const refundSnap = await tx.get(refundRef);
+                const { refundRef, refundSnap } = refundLookups.get(item.extRef);
                 const statusMap = { success: 'success', processing: 'processing', failure: 'failure' };
                 const patchRefund = {
                     orderID: order.orderID,
