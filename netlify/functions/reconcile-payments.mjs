@@ -1,7 +1,10 @@
 // Netlify Scheduled Function: кожні ~10 хв.
 // 1) звіряє завислі payments (created/processing довше 5 хв) через invoice/status —
 //    саме так ловимо статус "expired", який вебхуком не приходить;
-// 2) скасовує замовлення awaiting_payment без живого інвойсу старші за 24 год.
+// 2) скасовує замовлення awaiting_payment без живого інвойсу старші за 24 год;
+// 3) звіряє застряглі повернення (refunds зі status requested/processing довше 5 хв) —
+//    якщо вебхук про завершення скасування не дійшов (чи раніше не застосувався через
+//    баг транзакції в apply-invoice-state.mjs), саме тут статус підхоплюється повторно.
 // Архітектурний опис, 7.3. Запускається лише на production-деплої (обмеження Netlify);
 // на preview викликається вручну.
 import firebaseAdminPkg from './_firebaseAdmin.js';
@@ -64,7 +67,34 @@ export default async (req) => {
         cancelled++;
     }
 
-    console.log(`reconcile-payments: перевірено ${checked}/${stale.size} платежів, скасовано ${cancelled}/${abandoned.size} замовлень`);
+    // --- 3) застряглі повернення ---
+    const refundCutoff = new Date(now - STALE_PAYMENT_AFTER_MS);
+    const stuckRefunds = await db.collection('refunds')
+        .where('status', 'in', ['requested', 'processing'])
+        .where('requestedAt', '<=', refundCutoff)
+        .limit(BATCH_SIZE)
+        .get();
+
+    let refundsChecked = 0;
+    for (const doc of stuckRefunds.docs) {
+        const refund = doc.data();
+        if (!refund.invoiceId) continue;
+        try {
+            const status = await mono.getInvoiceStatus(refund.invoiceId);
+            await applyInvoiceState({ db, event: status, source: 'cron' });
+            refundsChecked++;
+        } catch (e) {
+            if (e instanceof MonoApiError && e.kind === 'not_found') {
+                await db.collection('orders').doc(refund.orderID).set({
+                    needsAttention: { reason: ATTENTION.UNKNOWN_INVOICE, details: { invoiceId: refund.invoiceId }, at: new Date() },
+                }, { merge: true }).catch(() => {});
+            } else {
+                console.error('reconcile-payments: не вдалося перевірити повернення', refund.invoiceId, e);
+            }
+        }
+    }
+
+    console.log(`reconcile-payments: перевірено ${checked}/${stale.size} платежів, скасовано ${cancelled}/${abandoned.size} замовлень, перевірено ${refundsChecked}/${stuckRefunds.size} повернень`);
     return new Response(null, { status: 200 });
 };
 
