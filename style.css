@@ -460,7 +460,7 @@ nav {
 .product-card.out-of-stock .product-img img { opacity: 0.5; }
 
 /* --- Breadcrumb --- */
-.breadcrumb { padding: 110px 0 0; font-size: 0.9rem; color: #888; }
+.breadcrumb { padding-top: 110px; padding-bottom: 0; font-size: 0.9rem; color: #888; }
 .breadcrumb a { color: #888; text-decoration: none; }
 .breadcrumb a:hover { color: var(--primary-pink); }
 .breadcrumb .current { color: var(--deep-berry); font-weight: 600; }
@@ -483,7 +483,7 @@ nav {
 .not-found-buttons { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
 
 /* --- Сторінка товару --- */
-.product-page-section { padding: 30px 0 20px; }
+.product-page-section { padding-top: 30px; padding-bottom: 20px; }
 .product-page-grid { display: flex; gap: 60px; align-items: flex-start; }
 .product-page-photo { flex: 1 1 45%; position: sticky; top: 110px; }
 .product-page-photo img { width: 100%; border-radius: 20px; object-fit: cover; box-shadow: 0 20px 45px rgba(74, 42, 47, 0.12); }
@@ -548,7 +548,7 @@ nav {
 }
 
 /* --- Оформлення замовлення --- */
-.checkout-section { padding: 110px 0 80px; }
+.checkout-section { padding-top: 110px; padding-bottom: 80px; }
 .checkout-empty { text-align: center; padding: 60px 0; font-size: 1.1rem; }
 .checkout-empty a { color: var(--primary-pink); font-weight: 600; }
 
