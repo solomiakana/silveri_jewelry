@@ -6,11 +6,8 @@
 // про gtag/fbq. Будь-яка помилка тут глушиться — аналітика не може зламати продаж.
 
 // ⚠️ ВСТАВ СВОЇ ID СЮДИ ПЕРЕД ДЕПЛОЄМ:
-const GA4_MEASUREMENT_ID = 'G-XXXXXXXXXX';   // GA4 → Admin → Data Streams → Measurement ID
+const GA4_MEASUREMENT_ID = 'G-2LTG1BD7T0';
 const META_PIXEL_ID = '1064635219902420'; 
-
-// 'opt-out' — трекери працюють, доки відвідувач не натиснув «Відхилити»
-// 'opt-in'  — трекери вантажаться тільки після «Прийняти» (для аудиторії ЄС)
 const CONSENT_MODE = 'opt-out';
 const ATTRIBUTION_TTL_DAYS = 30;
 const CURRENCY = 'UAH';
