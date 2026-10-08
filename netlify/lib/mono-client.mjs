@@ -84,8 +84,13 @@ export function createMonoClient({
 
     return {
         // POST /api/merchant/invoice/create
-        async createInvoice({ amountKop, reference, destination, redirectUrl, webHookUrl, validitySec }) {
+        async createInvoice({ amountKop, reference, destination, redirectUrl, webHookUrl, validitySec, basketOrder }) {
             if (!Number.isInteger(amountKop) || amountKop <= 0) throw new RangeError('Некоректна сума інвойсу');
+            // Mono вимагає непорожній basketOrder для фіскалізації (errCode INVALID_MERCHANT_PAYM_INFO,
+            // якщо порожній/відсутній) — перевіряємо тут, щоб не отримати відмову Mono на порожньому масиві.
+            if (!Array.isArray(basketOrder) || basketOrder.length === 0) {
+                throw new RangeError('basketOrder не може бути порожнім');
+            }
             const data = await request('POST', '/api/merchant/invoice/create', {
                 body: {
                     amount: amountKop,
@@ -94,7 +99,7 @@ export function createMonoClient({
                     validity: validitySec,
                     redirectUrl,
                     webHookUrl,
-                    merchantPaymInfo: { reference, destination },
+                    merchantPaymInfo: { reference, destination, basketOrder },
                 },
             });
             if (!data || typeof data.invoiceId !== 'string' || !INVOICE_ID_RE.test(data.invoiceId)
