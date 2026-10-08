@@ -11,6 +11,7 @@ import { isBreakerOpen, recordMonoFailure, recordMonoSuccess } from '../lib/brea
 import { json, okJson, badRequest, notFound, conflict, forbidden, badGateway, readJsonBody } from '../lib/http.mjs';
 import { ORDER_ID_RE, LOCK_TTL_MS } from '../lib/payment-constants.mjs';
 import { MonoApiError } from '../lib/mono-client.mjs';
+import { buildBasketOrder } from '../lib/mono-basket.mjs';
 
 const { getDb } = firebaseAdminPkg;
 const VALIDITY_SEC = 24 * 3600; // довший термін для посилання, яке надсилає менеджер
@@ -95,6 +96,7 @@ export default async (req) => {
             redirectUrl: redirectUrlFor(orderID),
             webHookUrl: webHookUrl(),
             validitySec: VALIDITY_SEC,
+            basketOrder: buildBasketOrder({ order, amountKop: order.onlineAmountKop }),
         });
         await recordMonoSuccess(db);
     } catch (e) {
