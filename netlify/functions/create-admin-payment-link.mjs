@@ -98,6 +98,14 @@ export default async (req) => {
         });
         await recordMonoSuccess(db);
     } catch (e) {
+        // Причина раніше не логувалась — лише загальне повідомлення клієнту, без деталей у Netlify logs.
+        console.error('create-admin-payment-link: mono.createInvoice провалився', orderID, {
+            kind: e instanceof MonoApiError ? e.kind : 'non_mono_error',
+            status: e instanceof MonoApiError ? e.status : null,
+            errCode: e instanceof MonoApiError ? e.errCode : null,
+            errText: e instanceof MonoApiError ? e.errText : null,
+            message: e?.message,
+        });
         await orderRef.set({ paymentStatus: 'payment_error', paymentLock: null }, { merge: true });
         if (e instanceof MonoApiError && e.outcomeUnknown) await recordMonoFailure(db);
         return badGateway('Не вдалося створити посилання на оплату.', 'mono_unavailable');
@@ -139,5 +147,5 @@ export default async (req) => {
 };
 
 export const config = {
-    rateLimit: { windowLimit: 5, windowSize: 60, aggregateBy: ['ip'] },
+    rateLimit: { windowLimit: 10, windowSize: 60, aggregateBy: ['ip'] },
 };
