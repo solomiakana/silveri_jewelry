@@ -9,6 +9,7 @@ import { isBreakerOpen, recordMonoFailure, recordMonoSuccess } from '../lib/brea
 import { json, okJson, badRequest, notFound, conflict, tooMany, badGateway, originAllowed, readJsonBody } from '../lib/http.mjs';
 import { ORDER_ID_RE, LOCK_TTL_MS } from '../lib/payment-constants.mjs';
 import { MonoApiError } from '../lib/mono-client.mjs';
+import { buildBasketOrder } from '../lib/mono-basket.mjs';
 
 const { getDb } = firebaseAdminPkg;
 const VALIDITY_SEC = 3600; // 1 година для клієнтського інвойсу (24 год — лише для адмінського посилання)
@@ -111,12 +112,16 @@ export default async (req) => {
             redirectUrl: redirectUrlFor(orderID),
             webHookUrl: webHookUrl(),
             validitySec: VALIDITY_SEC,
+            basketOrder: buildBasketOrder({ order, amountKop: order.onlineAmountKop }),
         });
         await recordMonoSuccess(db);
     } catch (e) {
         await orderRef.set({ paymentStatus: 'payment_error', paymentLock: null }, { merge: true });
         if (e instanceof MonoApiError) {
             if (e.kind === 'auth') console.error('create-payment: MONOBANK_MERCHANT_TOKEN недійсний (403 від Mono)');
+            else console.error('create-payment: mono.createInvoice провалився', orderID, {
+                kind: e.kind, status: e.status, errCode: e.errCode, errText: e.errText,
+            });
             if (e.outcomeUnknown) await recordMonoFailure(db);
         }
         return badGateway('Не вдалося створити оплату. Спробуйте ще раз.', 'mono_unavailable');
