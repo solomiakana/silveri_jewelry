@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken as getAppCheckToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app-check.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, getDoc, onSnapshot, query, orderBy, where, getDocs, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, getDoc, onSnapshot, query, orderBy, where, limit, getDocs, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
@@ -71,18 +71,95 @@ const escapeHTML = (str) => typeof str === 'string'
 const PAGE_SIZE = 12; // товарів на сторінці каталогу
 let allProducts = [];  // повний список товарів з бази (оновлюється в реальному часі)
 
-// Один спільний "слухач" бази — і для каталогу, і для блоку "Популярні",
-// щоб не робити два окремих читання Firestore на кожне завантаження сторінки
+// --- Публічні дані каталогу: ОДИН кешований запит замість живих підписок на Firestore ---
+// Раніше кожна сторінка підписувалась (onSnapshot) на всю колекцію products (і reviews), тож
+// кожен перегляд коштував N + M читань. Тепер усі сторінки беруть товари й відгуки з /api/catalog
+// (Netlify Function + кеш CDN, див. netlify/functions/catalog.mjs). Порядок спроб:
+//   1) свіжа копія в sessionStorage (до 2 хв) — навіть без мережевого запиту;
+//   2) /api/catalog;
+//   3) застаріла копія з sessionStorage, якщо мережа/функція недоступні;
+//   4) резервний одноразовий getDocs із Firestore (як раніше, але без onSnapshot) — щоб сайт
+//      працював і тоді, коли функції недоступні (наприклад, локальна розробка без Netlify).
+const CATALOG_URL = '/api/catalog';
+const CATALOG_SESSION_KEY = 'silveri_catalog_v1';
+const CATALOG_SESSION_TTL_MS = 2 * 60 * 1000;
+const REVIEWS_LIMIT = 60; // має збігатися з REVIEWS_LIMIT у netlify/lib/catalog.mjs
+
+function readCatalogSession() {
+    try {
+        const raw = sessionStorage.getItem(CATALOG_SESSION_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !isValidCatalog(parsed.data)) return null;
+        return parsed; // { at, data }
+    } catch {
+        return null; // приватний режим Safari, переповнене сховище, зіпсований JSON
+    }
+}
+
+function writeCatalogSession(data) {
+    try {
+        sessionStorage.setItem(CATALOG_SESSION_KEY, JSON.stringify({ at: Date.now(), data }));
+    } catch { /* кеш — лише оптимізація */ }
+}
+
+function isValidCatalog(data) {
+    return !!data && Array.isArray(data.products) && Array.isArray(data.reviews);
+}
+
+// Резервний шлях: ті самі запити, що раніше робив браузер, але одноразово.
+async function loadCatalogFromFirestore() {
+    const [productsSnap, reviewsSnap] = await Promise.all([
+        getDocs(query(collection(db, "products"), orderBy("createdAt", "desc"))),
+        getDocs(query(collection(db, "reviews"), where("published", "==", true), orderBy("sortOrder", "desc"), limit(REVIEWS_LIMIT))),
+    ]);
+    return {
+        products: productsSnap.docs.map(d => d.data()),
+        reviews: reviewsSnap.docs.map(d => d.data()),
+    };
+}
+
+let catalogPromise = null;
+// Повертає { products, reviews }. Один запит на сторінку: сітка каталогу, «Популярні», відгуки,
+// картка товару й «Схожі» ділять одну й ту саму обіцянку.
+function loadCatalog() {
+    if (catalogPromise) return catalogPromise;
+
+    catalogPromise = (async () => {
+        const cached = readCatalogSession();
+        if (cached && Date.now() - cached.at < CATALOG_SESSION_TTL_MS) return cached.data;
+
+        try {
+            const response = await fetch(CATALOG_URL, { headers: { 'Accept': 'application/json' } });
+            if (!response.ok) throw new Error(`catalog HTTP ${response.status}`);
+            const data = await response.json();
+            if (!isValidCatalog(data)) throw new Error('catalog: неочікувана форма відповіді');
+            writeCatalogSession(data);
+            return data;
+        } catch (e) {
+            console.warn('Каталог: /api/catalog недоступний', e);
+            if (cached) return cached.data; // краще трохи застарілі дані, ніж додаткові читання
+            const data = await loadCatalogFromFirestore();
+            writeCatalogSession(data);
+            return data;
+        }
+    })();
+
+    // Якщо все провалилось — наступна спроба на цій сторінці має починатися заново
+    catalogPromise.catch(() => { catalogPromise = null; });
+    return catalogPromise;
+}
+
+// Каталог і блок "Популярні" ділять одні й ті самі дані (allProducts) — жодних окремих запитів
 function fetchAndRenderProducts() {
     const grid = document.getElementById('product-grid');
     const popularGrid = document.getElementById('popular-grid');
     if (!grid && !popularGrid) return; // на цій сторінці немає жодного місця для показу товарів
 
     if (grid) grid.innerHTML = '<p class="loading-msg">Завантаження колекції...</p>';
-    const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
 
-    onSnapshot(q, (snapshot) => {
-        allProducts = snapshot.docs.map(d => d.data());
+    loadCatalog().then(({ products }) => {
+        allProducts = products;
 
         if (allProducts.length === 0) {
             if (grid) grid.innerHTML = '<p class="empty-msg">Товарів поки немає.</p>';
@@ -94,6 +171,9 @@ function fetchAndRenderProducts() {
 
         renderCatalog();
         renderFeatured();
+    }).catch((e) => {
+        console.error("Помилка завантаження каталогу:", e);
+        if (grid) grid.innerHTML = '<p class="empty-msg">Не вдалося завантажити каталог. Оновіть сторінку.</p>';
     });
 }
 
@@ -192,26 +272,21 @@ function renderPagination(totalItems) {
     }
 }
 
-// Публічний блок відгуків (головна + сторінка товару) — тільки опубліковані, найновіші спершу
+// Публічний блок відгуків (головна + сторінка товару) — тільки опубліковані, найновіші спершу.
+// Дані приходять із того самого кешованого запиту, що й каталог (loadCatalog), тож окремого
+// читання колекції reviews на кожен перегляд більше немає.
 function renderPublicReviews() {
     const grid = document.getElementById('reviews-grid');
     if (!grid) return;
 
-    const q = query(
-        collection(db, "reviews"),
-        where("published", "==", true),
-        orderBy("sortOrder", "desc")
-    );
-
-    onSnapshot(q, (snapshot) => {
-        if (snapshot.empty) {
+    loadCatalog().then(({ reviews }) => {
+        if (reviews.length === 0) {
             grid.innerHTML = '<p class="empty-msg">Відгуків поки немає.</p>';
             return;
         }
 
         const fragment = document.createDocumentFragment();
-        snapshot.forEach((reviewDoc) => {
-            const data = reviewDoc.data();
+        reviews.forEach((data) => {
             const card = document.createElement('div');
             card.className = 'review-card';
             card.innerHTML = `
@@ -225,6 +300,9 @@ function renderPublicReviews() {
 
         grid.innerHTML = '';
         grid.appendChild(fragment);
+    }).catch((e) => {
+        console.error("Помилка завантаження відгуків:", e);
+        grid.innerHTML = '<p class="empty-msg">Не вдалося завантажити відгуки.</p>';
     });
 }
 
@@ -258,6 +336,9 @@ function renderFeatured() {
 }
 
 // --- Сторінка окремого товару (product.html?id=АРТИКУЛ) ---
+// Товар шукається в уже завантаженому кешованому каталозі (0 читань Firestore). Якщо його там
+// немає — наприклад, щойно доданий, а кеш ще не оновився — один резервний запит за артикулом
+// (1 читання), і лише після цього "Товар не знайдено".
 async function initProductPage() {
     const root = document.getElementById('product-page-root');
     if (!root) return; // не на сторінці товару — нічого робити
@@ -269,17 +350,21 @@ async function initProductPage() {
     }
 
     try {
-        const q = query(collection(db, "products"), where("id", "==", productId));
-        const snapshot = await getDocs(q);
+        const { products } = await loadCatalog();
+        let product = products.find(p => p.id === productId);
 
-        if (snapshot.empty) {
+        if (!product) {
+            const snapshot = await getDocs(query(collection(db, "products"), where("id", "==", productId), limit(1)));
+            if (!snapshot.empty) product = snapshot.docs[0].data();
+        }
+
+        if (!product) {
             renderProductNotFound(root);
             return;
         }
 
-        const product = snapshot.docs[0].data();
         renderProductDetail(root, product);
-        loadRelatedProducts(product);
+        renderRelatedProducts(product, products);
         renderPublicReviews();
     } catch (e) {
         console.error("Помилка завантаження товару:", e);
@@ -407,35 +492,25 @@ function renderProductDetail(root, product) {
     });
 }
 
-// "Схожі товари" — до 4 товарів з тієї ж категорії, окрім поточного
-async function loadRelatedProducts(product) {
+// "Схожі товари" — до 4 товарів з тієї ж категорії, окрім поточного.
+// Береться з уже завантаженого списку: раніше це був окремий запит на всю категорію.
+function renderRelatedProducts(product, allItems) {
     const block = document.getElementById('related-products-block');
     const grid = document.getElementById('related-grid');
     if (!block || !grid || !product.category) return;
 
-    try {
-        const q = query(collection(db, "products"), where("category", "==", product.category));
-        const snapshot = await getDocs(q);
+    const related = allItems
+        .filter(p => p.category === product.category && p.id !== product.id)
+        .slice(0, 4);
 
-        const related = snapshot.docs
-            .map(d => d.data())
-            .filter(p => p.id !== product.id)
-            .slice(0, 4);
+    if (related.length === 0) return; // блок лишається прихованим
 
-        if (related.length === 0) return; // блок лишається прихованим
-
-        const fragment = document.createDocumentFragment();
-        related.forEach(p => fragment.appendChild(buildProductCard(p)));
-        grid.appendChild(fragment);
-        block.hidden = false;
-        track(a => a.viewItemList('related', 'Схожі товари', related));
-    } catch (e) {
-        console.error("Помилка завантаження схожих товарів:", e);
-    }
+    const fragment = document.createDocumentFragment();
+    related.forEach(p => fragment.appendChild(buildProductCard(p)));
+    grid.appendChild(fragment);
+    block.hidden = false;
+    track(a => a.viewItemList('related', 'Схожі товари', related));
 }
-
-
-
 
 window.login = async () => {
     const email = document.getElementById('adminEmail').value.trim();
@@ -466,6 +541,38 @@ window.login = async () => {
         errorP.textContent = (messages[error.code] || 'Помилка входу.') + ' [' + (error.code || 'unknown') + ']';
     }
 };
+
+// --- Оновлення публічного кешу каталогу після змін в адмінці ---
+// Сайт віддає товари й відгуки з кешу CDN (/api/catalog, TTL до 1 год). Після кожного запису
+// в products/reviews просимо сервер скинути цей кеш — тоді зміни видно відвідувачам за секунди.
+// Виклики з дебаунсом: серія швидких правок дасть один запит. Помилка не блокує роботу адміна,
+// лише попереджає (раз за сесію), що зміни з'являться на сайті пізніше.
+let catalogRefreshTimer = null;
+let catalogRefreshWarned = false;
+
+function notifyCatalogChanged() {
+    clearTimeout(catalogRefreshTimer);
+    catalogRefreshTimer = setTimeout(async () => {
+        let ok = false;
+        try {
+            if (auth.currentUser) {
+                const token = await auth.currentUser.getIdToken();
+                const response = await fetch('/api/catalog-refresh', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+                const data = response.ok ? await response.json().catch(() => null) : null;
+                ok = !!(data && data.purged);
+            }
+        } catch (e) {
+            console.warn('Не вдалося оновити публічний кеш каталогу:', e);
+        }
+        if (!ok && !catalogRefreshWarned) {
+            catalogRefreshWarned = true;
+            alert('Зміни збережено, але кеш сайту не вдалося оновити автоматично. Вони з’являться для відвідувачів протягом години.');
+        }
+    }, 1500);
+}
 
 window.logout = () => signOut(auth);
 
@@ -580,6 +687,7 @@ window.uploadProduct = async () => {
             featured: document.getElementById('prodFeatured').checked,
             createdAt: new Date()
         });
+        notifyCatalogChanged();
         
         status.textContent = "Товар успішно додано!";
         form.reset();
@@ -599,6 +707,7 @@ window.deleteProduct = async (docId, imageUrl) => {
             await deleteObject(ref(storage, imageUrl));
         }
         await deleteDoc(doc(db, "products", docId));
+        notifyCatalogChanged();
     } catch (error) { 
         console.error("Помилка видалення:", error); 
         alert("Не вдалося видалити товар.");
@@ -702,6 +811,7 @@ window.saveProductEdit = async () => {
 
         status.textContent = "Збереження...";
         await updateDoc(doc(db, "products", docId), updateData);
+        notifyCatalogChanged();
 
         status.textContent = "Збережено!";
         setTimeout(() => { closeEditModal(); status.textContent = ''; }, 800);
@@ -716,6 +826,7 @@ window.saveProductEdit = async () => {
 window.toggleFeatured = async (docId, currentState) => {
     try {
         await updateDoc(doc(db, "products", docId), { featured: !currentState });
+        notifyCatalogChanged();
     } catch (e) {
         console.error("Помилка оновлення статусу 'Популярне':", e);
         alert("Не вдалося оновити статус.");
@@ -725,6 +836,7 @@ window.toggleFeatured = async (docId, currentState) => {
 window.toggleInStock = async (docId, currentState) => {
     try {
         await updateDoc(doc(db, "products", docId), { inStock: !currentState });
+        notifyCatalogChanged();
     } catch (e) {
         console.error("Помилка оновлення наявності:", e);
         alert("Не вдалося оновити наявність.");
@@ -1317,6 +1429,7 @@ window.uploadReview = async () => {
             sortOrder: Date.now(),
             createdAt: new Date()
         });
+        notifyCatalogChanged();
 
         status.textContent = "Відгук додано!";
         document.getElementById('reviewName').value = '';
@@ -1389,6 +1502,7 @@ window.deleteReview = async (docId, imageUrl) => {
             await deleteObject(ref(storage, imageUrl));
         }
         await deleteDoc(doc(db, "reviews", docId));
+        notifyCatalogChanged();
     } catch (e) {
         console.error("Помилка видалення відгуку:", e);
         alert("Не вдалося видалити відгук.");
@@ -1464,6 +1578,7 @@ window.saveReviewEdit = async () => {
 
         status.textContent = "Збереження...";
         await updateDoc(doc(db, "reviews", docId), updateData);
+        notifyCatalogChanged();
 
         status.textContent = "Збережено!";
         setTimeout(() => { closeEditReviewModal(); status.textContent = ''; }, 800);
