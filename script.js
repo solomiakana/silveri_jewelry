@@ -150,6 +150,9 @@ function loadCatalog() {
     return catalogPromise;
 }
 
+// Спільний доступ до кешованого каталогу для promo-banner.js (рекламний банер): один запит на сторінку
+window.SilveriCatalog = { load: loadCatalog };
+
 // Каталог і блок "Популярні" ділять одні й ті самі дані (allProducts) — жодних окремих запитів
 function fetchAndRenderProducts() {
     const grid = document.getElementById('product-grid');
