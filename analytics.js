@@ -1,11 +1,4 @@
-// --- Аналітика Silveri: GA4 + Meta Pixel + атрибуція + згода ---
-// Підключається окремим <script> (не type="module") на кожній публічній сторінці,
-// до script.js/cart.js. Працює незалежно від Firebase.
-//
-// Уся решта коду сайту викликає ТІЛЬКИ window.SilveriAnalytics.* і не знає
-// про gtag/fbq. Будь-яка помилка тут глушиться — аналітика не може зламати продаж.
 
-// ⚠️ ВСТАВ СВОЇ ID СЮДИ ПЕРЕД ДЕПЛОЄМ:
 const GA4_MEASUREMENT_ID = 'G-2LTG1BD7T0';
 const META_PIXEL_ID = '1064635219902420'; 
 const CONSENT_MODE = 'opt-out';
@@ -415,6 +408,29 @@ const CURRENCY = 'UAH';
     // reason: validation | unavailable | rate_limited | server_error | network_error
     A.checkoutError = function (reason) {
         safe(() => emitGA('checkout_error', { reason: String(reason || 'unknown') }));
+    };
+
+    // Рекламний банер (promo-banner.js). action: view | select | dismiss
+    // promo: { id, name, creative, slot }; item — товар акції (для view/select)
+    A.promotion = function (action, promo = {}, item) {
+        safe(() => {
+            if (!promo.id) return;
+            const base = {
+                promotion_id: promo.id,
+                promotion_name: promo.name || promo.id,
+                creative_name: promo.creative || '',
+                creative_slot: promo.slot || '',
+                location_id: location.pathname,
+            };
+            if (item && item.id) base.items = [gaItem(item)];
+            if (action === 'view') {
+                if (once('promo_view:' + promo.id)) emitGA('view_promotion', base);
+            } else if (action === 'select') {
+                emitGA('select_promotion', base);
+            } else if (action === 'dismiss') {
+                emitGA('promotion_dismiss', { promotion_id: promo.id, method: promo.slot || '' });
+            }
+        });
     };
 
     // ---------- Згода: публічний API ----------
