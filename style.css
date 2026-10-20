@@ -486,7 +486,7 @@ nav {
 .product-page-section { padding-top: 30px; padding-bottom: 20px; }
 .product-page-grid { display: flex; gap: 60px; align-items: flex-start; }
 .product-page-photo { flex: 1 1 45%; position: sticky; top: 110px; }
-.product-page-photo img { width: 100%; border-radius: 20px; object-fit: cover; box-shadow: 0 20px 45px rgba(74, 42, 47, 0.12); }
+.product-page-photo img { display: block; width: 100%; height: auto; aspect-ratio: 1 / 1; border-radius: 20px; object-fit: cover; box-shadow: 0 20px 45px rgba(74, 42, 47, 0.12); } /* height:auto — інакше атрибут height="600" з розмітки розтягує/обрізає фото на вузьких екранах */
 .product-page-info { flex: 1 1 55%; }
 .product-page-info .product-id { color: #999; font-size: 0.9rem; margin-bottom: 12px; }
 .product-page-info h1 { font-size: 2.2rem; color: var(--deep-berry); margin-bottom: 8px; }
@@ -543,8 +543,24 @@ nav {
 }
 
 @media (max-width: 768px) {
-    .product-page-grid { flex-direction: column; gap: 30px; }
-    .product-page-photo { position: static; }
+    .product-page-grid { flex-direction: column; gap: 20px; width: 100%; }
+    .product-page-photo { position: static; width: 100%; flex: none; }
+    .product-page-section { padding-top: 16px; }
+    .product-page-photo img { border-radius: 16px; box-shadow: 0 10px 25px rgba(74, 42, 47, 0.1); }
+    .product-page-info { flex: none; width: 100%; }
+    /* Легша типографіка на мобільному: менший розмір і м'якша жирність */
+    .product-page-info h1 { font-size: 1.45rem; font-weight: 600; line-height: 1.3; letter-spacing: 0; margin-bottom: 6px; }
+    .product-page-info .product-id { font-size: 0.82rem; margin-bottom: 8px; }
+    .stock-status { font-size: 0.88rem; font-weight: 500; margin-bottom: 10px; }
+    .product-page-price { font-size: 1.55rem; font-weight: 600; margin-bottom: 6px; }
+    .product-page-material { font-size: 0.92rem; font-weight: 500; margin-bottom: 14px; }
+    .product-page-desc { font-size: 0.95rem; line-height: 1.6; margin-bottom: 18px; }
+    .product-page-actions { margin-bottom: 20px; }
+    .product-page-actions .cart-btn { width: 100%; padding: 14px 20px; font-size: 0.92rem; font-weight: 600; letter-spacing: 0.3px; }
+    .product-page-info-blocks { font-size: 0.86rem; gap: 8px; line-height: 1.5; }
+    .product-page-section-block { padding: 28px 0; }
+    .product-page-section-block .section-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 14px; }
+    .spec-row { padding: 10px 0; font-size: 0.92rem; }
 }
 
 /* --- Оформлення замовлення --- */
