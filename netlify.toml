@@ -23,8 +23,9 @@
   from = "/catalog"
   to = "/catalog.html"
   status = 200
-
+  
 # Чистий URL для сторінки результату оплати: /order-status
+[[redirects]]
   from = "/order-status"
   to = "/order-status.html"
   status = 200
