@@ -579,6 +579,71 @@ function notifyCatalogChanged() {
 
 window.logout = () => signOut(auth);
 
+// --- Життєвий цикл onSnapshot-підписок адмінки (F-01) ---
+// Рівно одна підписка на колекцію на адмінську сесію. Фільтри (пошук за артикулом, категорія,
+// статус замовлень) підписок НЕ створюють: render*List лише перемальовують останній отриманий
+// snapshot з поточними значеннями фільтрів. Підписки створює тільки subscribeAdminLists()
+// (з onAuthStateChanged) і закриває stopAdminSubs() (вихід / інший користувач).
+const adminSubs = { products: null, packaging: null, orders: null, reviews: null }; // { active, unsubscribe }
+const adminSnapshots = { products: null, packaging: null, orders: null, reviews: null }; // останній snapshot
+let adminSessionUid = null;
+
+function startAdminSub(key, q, redraw) {
+    if (adminSubs[key]) return; // вже створена (або перервана помилкою — без автоматичної переспроби)
+    const sub = { active: true, unsubscribe: null };
+    adminSubs[key] = sub;
+    try {
+        sub.unsubscribe = onSnapshot(q, (snapshot) => {
+            if (!sub.active) return; // запізнілий callback після виходу / зміни сесії
+            adminSnapshots[key] = snapshot;
+            redraw();
+        }, (error) => {
+            if (!sub.active) return;
+            // Firestore сам завершує слухача після помилки (напр. permission-denied). Запис sub
+            // лишається в adminSubs, тож повторні виклики не створюють підписку знову в циклі:
+            // нова спроба можлива лише після виходу й повторного входу.
+            console.error(`Підписка адмінки "${key}" перервана:`, error?.code || error);
+        });
+    } catch (e) {
+        console.error(`Не вдалося створити підписку адмінки "${key}":`, e);
+    }
+}
+
+function subscribeAdminLists() {
+    startAdminSub('products', query(collection(db, "products"), orderBy("createdAt", "desc")), renderAdminList);
+    startAdminSub('packaging', query(collection(db, "packaging"), orderBy("sortOrder", "asc")), renderPackagingAdminList);
+    startAdminSub('orders', query(collection(db, "orders"), orderBy("createdAt", "desc")), renderOrdersList);
+    startAdminSub('reviews', query(collection(db, "reviews"), orderBy("sortOrder", "desc")), renderReviewsList);
+}
+
+function stopAdminSubs() {
+    Object.keys(adminSubs).forEach((key) => {
+        const sub = adminSubs[key];
+        if (sub) {
+            sub.active = false;
+            try { sub.unsubscribe?.(); } catch (e) { console.warn(`Не вдалося закрити підписку "${key}":`, e); }
+        }
+        adminSubs[key] = null;
+        adminSnapshots[key] = null;
+    });
+    // Дані (зокрема ПІБ і телефони з замовлень) не мають лишатися в прихованій панелі.
+    ['admin-product-list', 'admin-packaging-list', 'admin-orders-list', 'admin-reviews-list'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = '';
+    });
+    const badge = document.getElementById('new-orders-badge');
+    if (badge) {
+        badge.textContent = 0;
+        badge.hidden = true;
+    }
+}
+
+// Малює список з останнього snapshot (якщо він уже є). Нових запитів до Firestore не створює.
+function drawFromAdminSnapshot(key, draw) {
+    const snapshot = adminSnapshots[key];
+    if (snapshot) draw(snapshot);
+}
+
 onAuthStateChanged(auth, (user) => {
     const loginScreen = document.getElementById('login-screen');
     const adminPanel = document.getElementById('admin-panel');
@@ -588,10 +653,15 @@ onAuthStateChanged(auth, (user) => {
         loginScreen.style.display = isLoggedIn ? 'none' : 'flex';
         adminPanel.style.display = isLoggedIn ? 'block' : 'none';
         if (isLoggedIn) {
-            renderAdminList();
-            renderPackagingAdminList();
-            renderOrdersList();
-            renderReviewsList();
+            // Інший користувач без проміжного виходу: старі підписки й дані не переносимо.
+            if (adminSessionUid !== user.uid) {
+                stopAdminSubs();
+                adminSessionUid = user.uid;
+            }
+            subscribeAdminLists(); // повторний виклик для тієї ж сесії нічого не дублює
+        } else {
+            adminSessionUid = null;
+            stopAdminSubs();
         }
     }
 });
@@ -1082,9 +1152,7 @@ function renderPackagingAdminList() {
     const listContainer = document.getElementById('admin-packaging-list');
     if (!listContainer) return;
 
-    const q = query(collection(db, "packaging"), orderBy("sortOrder", "asc"));
-
-    onSnapshot(q, (snapshot) => {
+    drawFromAdminSnapshot('packaging', (snapshot) => {
         const fragment = document.createDocumentFragment();
 
         if (snapshot.empty) {
@@ -1219,9 +1287,8 @@ function renderOrdersList() {
     if (!listContainer) return;
 
     const statusFilter = document.getElementById('orderStatusFilter')?.value || 'all';
-    const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
 
-    onSnapshot(q, (snapshot) => {
+    drawFromAdminSnapshot('orders', (snapshot) => {
         const fragment = document.createDocumentFragment();
         let newCount = 0;
 
@@ -1459,9 +1526,7 @@ function renderReviewsList() {
     const listContainer = document.getElementById('admin-reviews-list');
     if (!listContainer) return;
 
-    const q = query(collection(db, "reviews"), orderBy("sortOrder", "desc"));
-
-    onSnapshot(q, (snapshot) => {
+    drawFromAdminSnapshot('reviews', (snapshot) => {
         listContainer.innerHTML = '';
 
         if (snapshot.empty) {
@@ -1656,9 +1721,7 @@ function renderAdminList() {
     const searchVal = document.getElementById('searchArticul')?.value.toLowerCase() || "";
     const categoryVal = document.getElementById('filterCategory')?.value || "all";
 
-    const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
-    
-    onSnapshot(q, (snapshot) => {
+    drawFromAdminSnapshot('products', (snapshot) => {
         const fragment = document.createDocumentFragment();
         
         snapshot.forEach((productDoc) => {
